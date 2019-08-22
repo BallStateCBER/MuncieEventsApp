@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, WebView, Linking} from 'react-native';
+import {View, WebView, Linking, Platform} from 'react-native';
 import Styles from './Styles';
 import APICacher from '../APICacher';
 import LoadingScreen from '../components/LoadingScreen';
