@@ -269,23 +269,25 @@ export default class AddEventsForm extends Component{
             });
             if (action !== TimePickerAndroid.dismissedAction) {
                 modifier = "AM"
+                cleanMinute = minute
+                cleanHour = hour
                 if(minute == 0){
-                    minute += "0"
+                    cleanMinute += "0"
                 }
                 else if(minute < 10){
-                    minute = "0" + minute
+                    cleanMinute = "0" + minute
                 }
                 if(hour > 12){
-                    hour -= 12
+                    cleanHour -= 12
                     modifier = "PM"
                 }
                 else if(hour == 0){
-                    hour = 12
+                    cleanHour = 12
                 }
                 else if(hour == 12){
                     modifier = "PM"
                 }
-                time = hour + ":" + minute + ":" + "00 " + modifier
+                time = cleanHour + ":" + cleanMinute + ":" + "00 " + modifier
                 if(isStartTime){
                     this.setState({startTime: time})
                 }
