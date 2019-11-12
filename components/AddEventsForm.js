@@ -1,5 +1,5 @@
 import React, {Component} from 'react';  
-import {View, Platform, Text, Picker, TextInput, Modal, DatePickerAndroid, TimePickerAndroid, DatePickerIOS, FlatList, Switch, ScrollView, AsyncStorage, Linking, TouchableOpacity} from 'react-native';
+import {View, Platform, Text, Picker, TextInput, Modal, DatePickerAndroid, TimePickerAndroid, DatePickerIOS, FlatList, Switch, ScrollView, AsyncStorage, Linking, TouchableOpacity, KeyboardAvoidingView} from 'react-native';
 import Styles from '../pages/Styles';
 import APICacher from '../APICacher'
 import CustomButton from '../pages/CustomButton';
@@ -588,6 +588,7 @@ export default class AddEventsForm extends Component{
                                 underlineColorAndroid="transparent"
                             />
                         </View>
+						<KeyboardAvoidingView style ={{flex:1}} behavior="padding" enabled>
                         <View style={Styles.formRow}>
                             <Text style={Styles.formLabel}>Source </Text>
                             <TextInput               
@@ -610,6 +611,7 @@ export default class AddEventsForm extends Component{
                                 onPress={() => this.attemptEventSubmission()}
                             />
                         </View>
+						</KeyboardAvoidingView>
                         <View>{this.state.statusMessage}</View>
                         <Text>{'\n\n'}</Text>
                     </View>

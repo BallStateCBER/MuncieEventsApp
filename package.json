@@ -21,6 +21,6 @@
     "react-navigation": "^2.18.3",
     "redux": "^4.0.4",
     "ws": "^6.2.1",
-    "@expo/vector-icons": "*"
+    "@expo/vector-icons": "^10.0.1"
   }
 }
