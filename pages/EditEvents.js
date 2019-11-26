@@ -1,5 +1,5 @@
 import React from 'react';  
-import {View, Platform, Text, Picker, TextInput, Modal, DatePickerAndroid, TimePickerAndroid, DatePickerIOS, FlatList, Switch, ScrollView, AsyncStorage, TouchableOpacity} from 'react-native';
+import {View, Platform, Text, Picker, TextInput, Modal, DatePickerAndroid, TimePickerAndroid, DatePickerIOS, FlatList, Switch, ScrollView, AsyncStorage, TouchableOpacity, KeyboardAvoidingView} from 'react-native';
 import Styles from './Styles';
 import APICacher from '../APICacher'
 import CustomButton from './CustomButton';
@@ -500,29 +500,31 @@ export default class EditEvents extends React.Component {
                               underlineColorAndroid="transparent"
                           />
                       </View>
-                      <View style={Styles.formRow}>
-                          <Text style={Styles.formLabel}>Source </Text>
-                          <TextInput
-                              value={this.state.source}               
-                              onChangeText={(source) => this.setState({source})}
-                              style={[Styles.textBox, Styles.formEntry]}
-                              placeholder = "Did you get this information from a website, newspaper, flyer, etc?"
-                              underlineColorAndroid="transparent"
-                          />
-                      </View>
-                      <View style={Styles.formRow}>
-                            <Text style={Styles.formLabel}>Images </Text>
-                            <Text style={Styles.formEntry}>If you would like to upload images for your event, please use the </Text>
-                            <TouchableOpacity onPress={()=>{this.goToWebsite()}}><Text style={{color: 'blue'}}>Muncie Events website.</Text></TouchableOpacity>
-                        </View>
-                      <View style={Styles.formRow}>
-                          <CustomButton
-                              text="Submit"
-                              buttonStyle={Styles.longButtonStyle}
-                              textStyle={Styles.longButtonTextStyle}
-                              onPress={() => this.submitEvent()}
-                          />
-                      </View>
+                      <KeyboardAvoidingView style ={{flex:1}} behavior="padding" enabled>
+                          <View style={Styles.formRow}>
+                              <Text style={Styles.formLabel}>Source </Text>
+                              <TextInput
+                                  value={this.state.source}
+                                  onChangeText={(source) => this.setState({source})}
+                                  style={[Styles.textBox, Styles.formEntry]}
+                                  placeholder = "Did you get this information from a website, newspaper, flyer, etc?"
+                                  underlineColorAndroid="transparent"
+                              />
+                          </View>
+                          <View style={Styles.formRow}>
+                                <Text style={Styles.formLabel}>Images </Text>
+                                <Text style={Styles.formEntry}>If you would like to upload images for your event, please use the </Text>
+                                <TouchableOpacity onPress={()=>{this.goToWebsite()}}><Text style={{color: 'blue'}}>Muncie Events website.</Text></TouchableOpacity>
+                            </View>
+                          <View style={Styles.formRow}>
+                              <CustomButton
+                                  text="Submit"
+                                  buttonStyle={Styles.longButtonStyle}
+                                  textStyle={Styles.longButtonTextStyle}
+                                  onPress={() => this.submitEvent()}
+                              />
+                          </View>
+                      </KeyboardAvoidingView>
                       <Text>{this.state.statusMessage}</Text>
                       <Text>{'\n\n'}</Text>
                   </View>

@@ -589,28 +589,28 @@ export default class AddEventsForm extends Component{
                             />
                         </View>
 						<KeyboardAvoidingView style ={{flex:1}} behavior="padding" enabled>
-                        <View style={Styles.formRow}>
-                            <Text style={Styles.formLabel}>Source </Text>
-                            <TextInput               
-                                onChangeText={(source) => this.setState({source})}
-                                style={[Styles.textBox, Styles.formEntry]}
-                                placeholder = "Did you get this information from a website, newspaper, flyer, etc?"
-                                underlineColorAndroid="transparent"
-                            />
-                        </View>
-                        <View style={Styles.formRow}>
-                            <Text style={Styles.formLabel}>Images </Text>
-                            <Text style={Styles.formEntry}>If you would like to upload images for your event, please use the </Text>
-                            <TouchableOpacity onPress={()=>{this.goToWebsite()}}><Text style={{color: 'blue'}}>Muncie Events website.</Text></TouchableOpacity>
-                        </View>
-                        <View style={Styles.formRow}>
-                            <CustomButton
-                                text="Submit"
-                                buttonStyle={Styles.longButtonStyle}
-                                textStyle={Styles.longButtonTextStyle}
-                                onPress={() => this.attemptEventSubmission()}
-                            />
-                        </View>
+                            <View style={Styles.formRow}>
+                                <Text style={Styles.formLabel}>Source </Text>
+                                <TextInput
+                                    onChangeText={(source) => this.setState({source})}
+                                    style={[Styles.textBox, Styles.formEntry]}
+                                    placeholder = "Did you get this information from a website, newspaper, flyer, etc?"
+                                    underlineColorAndroid="transparent"
+                                />
+                            </View>
+                            <View style={Styles.formRow}>
+                                <Text style={Styles.formLabel}>Images </Text>
+                                <Text style={Styles.formEntry}>If you would like to upload images for your event, please use the </Text>
+                                <TouchableOpacity onPress={()=>{this.goToWebsite()}}><Text style={{color: 'blue'}}>Muncie Events website.</Text></TouchableOpacity>
+                            </View>
+                            <View style={Styles.formRow}>
+                                <CustomButton
+                                    text="Submit"
+                                    buttonStyle={Styles.longButtonStyle}
+                                    textStyle={Styles.longButtonTextStyle}
+                                    onPress={() => this.attemptEventSubmission()}
+                                />
+                            </View>
 						</KeyboardAvoidingView>
                         <View>{this.state.statusMessage}</View>
                         <Text>{'\n\n'}</Text>
