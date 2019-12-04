@@ -1,5 +1,5 @@
 import React from 'react';
-import {Text, View, WebView, ScrollView, Image, AsyncStorage, Alert, Linking, TouchableOpacity, FlatList} from 'react-native';
+import {Text, View, WebView, ScrollView, Image, AsyncStorage, Alert, Linking, TouchableOpacity, FlatList, BackHandler} from 'react-native';
 import DateAndTimeParser from "../DateAndTimeParser";
 import{ withNavigation } from "react-navigation";
 import Styles from './Styles';
@@ -70,11 +70,23 @@ class ExpandedView extends React.Component {
         this.state={selectedPreviousScreen:false}
         this.APICacher = new APICacher();
         this.APIKey = new APIKey();
+		this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
       }
 
     componentDidMount(){
       this.retrieveStoredToken()
+	  BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
+
+    componentWillUnmount() {
+		BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+      }
+	  
+	handleBackButtonClick() {
+    this.props.navigation.goBack(null);
+	this.goBackOnce();
+    return true;
+}
 
     render() {
       renderedInfo = this.getDisplayedScreen()
@@ -436,7 +448,7 @@ class ExpandedView extends React.Component {
         <WebView
           originWhitelist={['*']}
           source={{ html: htmlDescription + style + script }}
-          style={{height:this.state.height}}
+          style= {{height:this.state.height}}
           scrollEnabled={false}
           javaScriptEnabled = {true}
           injectedJavaScript={injectScript}
