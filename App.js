@@ -10,10 +10,14 @@ import SearchResults from './pages/SearchResults'
 import SearchResultsPasser from './pages/SearchResultsPasser';
 import {createDrawerNavigator} from 'react-navigation';
 import ExpandedView from './pages/ExpandedView';
+import Categories from './pages/Categories';
+import Tags from './pages/Tags';
 
 const App = createDrawerNavigator({
   Home: { screen: HomeScreen },
   "Advanced Search": { screen: AdvancedSearch },
+  "Categories": {screen: Categories},
+  "Tags": {screen: Tags},
   "Go To Date": {screen: GoToDate},
   "Add Event": {screen: AddEditEvents},
   About: {screen: About},
