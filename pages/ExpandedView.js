@@ -1,5 +1,6 @@
 import React from 'react';
-import {Text, View, WebView, ScrollView, Image, AsyncStorage, Alert, Linking, TouchableOpacity, FlatList, BackHandler} from 'react-native';
+import {Text, View, ScrollView, Image, AsyncStorage, Alert, Linking, TouchableOpacity, FlatList, BackHandler} from 'react-native';
+import AutoHeightWebView from 'react-native-autoheight-webview'
 import DateAndTimeParser from "../DateAndTimeParser";
 import{ withNavigation } from "react-navigation";
 import Styles from './Styles';
@@ -11,44 +12,11 @@ import EditEvents from './EditEvents';
 import APICacher from '../APICacher';
 import APIKey from "../APIKey"
 
-//All 3 scripts below are used as workarounds for a bug with WebViews not displaying in certain nested Views.
-//Once React Native fixes these bugs, the scriptings can be removed
-const script = `
-  <script>
-    window.location.hash = 1;
-      var calculator = document.createElement("div");
-      calculator.id = "height-calculator";
-      while (document.body.firstChild) {
-          calculator.appendChild(document.body.firstChild);
-      }
-    document.body.appendChild(calculator);
-    document.title = calculator.scrollHeight;
-  </script>
-`;
-const style = `
+// Used in getDescriptionView for width
+const customStyle = `
   <style>
-  body, html, #height-calculator {
-      margin: 0;
-      padding: 0;
-  }
-  #height-calculator {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-  }
+  * {max-width: 100%;}
   </style>
-`;
-
-//This script is used to inject working links into the WebView, as the normal method can't be used due to a react native bug.
-const injectScript = `
-  (function () {
-    window.onclick = function(e) {
-      e.preventDefault();
-      window.postMessage(e.target.href);
-      e.stopPropagation()
-    }
-  }());
 `;
 
 class ExpandedView extends React.Component {
@@ -266,13 +234,6 @@ class ExpandedView extends React.Component {
       }
     }
 
-    onNavigationChange(event) {
-      if (event.title) {
-        const htmlHeight = Number(event.title)
-        this.setState({height:htmlHeight});
-      }
-   }
-
 
    getURLImage(imageURL){
     if(imageURL == "None"){
@@ -430,13 +391,6 @@ class ExpandedView extends React.Component {
      )
    }
 
-  //Opens link when called by WebView
-  onMessage({ nativeEvent }) {
-    const data = nativeEvent.data;
-    if (data !== undefined && data !== null) {
-      Linking.openURL(data);
-    }
-  } 
 
    getDescriptionView(){
      htmlDescription = this.eventData.attributes.description
@@ -445,17 +399,9 @@ class ExpandedView extends React.Component {
         <Text style={Styles.header}>
           Description 
         </Text>
-        <WebView
-          originWhitelist={['*']}
-          source={{ html: htmlDescription + style + script }}
-          style= {{height:this.state.height}}
-          scrollEnabled={false}
-          javaScriptEnabled = {true}
-          injectedJavaScript={injectScript}
-          onMessage = {this.onMessage}
-          onNavigationStateChange={
-            this.onNavigationChange.bind(this)
-          }
+        <AutoHeightWebView
+          source={{ html: htmlDescription + customStyle }}
+          startInLoadingState = {true}
         />
       </View>
      );
