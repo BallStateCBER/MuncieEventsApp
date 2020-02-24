@@ -1,5 +1,8 @@
 import React, {Component} from 'react';  
-import {View, Platform, Text, Picker, TextInput, Modal, DatePickerAndroid, TimePickerAndroid, DatePickerIOS, FlatList, Switch, ScrollView, AsyncStorage, Linking, TouchableOpacity, KeyboardAvoidingView} from 'react-native';
+import {View, Button, Image, Platform, Text, Picker, TextInput, Modal, DatePickerAndroid, TimePickerAndroid, DatePickerIOS, FlatList, Switch, ScrollView, AsyncStorage, Linking, TouchableOpacity, KeyboardAvoidingView} from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import Constants from 'expo-constants';
+import * as Permissions from 'expo-permissions';
 import Styles from '../pages/Styles';
 import APICacher from '../APICacher'
 import CustomButton from '../pages/CustomButton';
@@ -35,6 +38,7 @@ export default class AddEventsForm extends Component{
             locationDetails: null,
             failedToLoad: false,
             eventSubmitted: false,
+            image: null
         }
         this.tags=[]
         this.APICacher = new APICacher();
@@ -465,6 +469,47 @@ export default class AddEventsForm extends Component{
         Linking.openURL(url)
     }
 
+    getImagePicker(){
+        let { image } = this.state;
+
+        return (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <Button
+            title="Pick an image from camera roll"
+            onPress={this._pickImage}
+            />
+            {image &&
+            <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
+        </View>
+        );
+
+    
+    }
+
+    _pickImage = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.All,
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 1
+        });
+    
+        console.log(result);
+    
+        if (!result.cancelled) {
+          this.setState({ image: result.uri });
+        }
+      };
+
+    getPermissionAsync = async () => {
+        if (Constants.platform.ios) {
+          const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+          if (status !== 'granted') {
+            alert('Sorry, we need camera roll permissions to make this work!');
+          }
+        }
+    }
+
     render(){
         if(this.state.isLoading){;
             return(
@@ -492,6 +537,7 @@ export default class AddEventsForm extends Component{
             tagListModal = this.getTagListModal();
             required = this.getIsRequiredNotification();
             dateAndTimes = this.getDateAndTimes();
+            imagePicker = this.getImagePicker();
             return(
                     <View style={{flex:1}}>
                         {IOSDatePickerModal}
@@ -600,8 +646,7 @@ export default class AddEventsForm extends Component{
                             </View>
                             <View style={Styles.formRow}>
                                 <Text style={Styles.formLabel}>Images </Text>
-                                <Text style={Styles.formEntry}>If you would like to upload images for your event, please use the </Text>
-                                <TouchableOpacity onPress={()=>{this.goToWebsite()}}><Text style={{color: 'blue'}}>Muncie Events website.</Text></TouchableOpacity>
+                                    {imagePicker}
                             </View>
                             <View style={Styles.formRow}>
                                 <CustomButton
@@ -677,6 +722,7 @@ export default class AddEventsForm extends Component{
         address = this.state.address
         locationDetails = this.state.locationDetails
         chosenDate = this.state.chosenDate
+        image = this.state.image
 
         if(userToken){
             url = "https://api.muncieevents.com/v1/event?userToken=" + userToken + "&apikey="+this.APIKey.getAPIKey()
@@ -716,7 +762,8 @@ export default class AddEventsForm extends Component{
                 cost: cost,
                 description: description,
                 address: address,
-                location_details: locationDetails
+                location_details: locationDetails,
+                image: image
             })
         })
         .then((response) => response.json())
