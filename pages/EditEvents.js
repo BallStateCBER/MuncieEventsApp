@@ -1,6 +1,7 @@
 import React from 'react';  
-import {View, Platform, Text, Picker, TextInput, Modal, DatePickerAndroid, TimePickerAndroid, DatePickerIOS, FlatList, Switch, ScrollView, AsyncStorage, TouchableOpacity, KeyboardAvoidingView} from 'react-native';
+import {View, Platform, Text, Picker, TextInput, Modal, DatePickerAndroid, TimePickerAndroid, RNDateTimePicker, FlatList, Switch, ScrollView, AsyncStorage, TouchableOpacity, KeyboardAvoidingView} from 'react-native';
 import Styles from './Styles';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import APICacher from '../APICacher'
 import CustomButton from './CustomButton';
 import LoadingScreen from "../components/LoadingScreen";
@@ -249,19 +250,11 @@ export default class EditEvents extends React.Component {
   }
 
   async getAndroidTimePicker(){
-      try {
-          const {action, hour, minute} = await TimePickerAndroid.open({
-            hour: 12,
-            minute: 0,
-            is24Hour: false,
-          });
-          if (action !== TimePickerAndroid.dismissedAction) {
+      <RNDateTimePicker mode="time" value={new Date()}></RNDateTimePicker>
+          if (action !== TimePickerAndroid.onChange) {
             time = hour + ":" + minute
             this.setState({startTime: time})
           }
-        } catch ({code, message}) {
-          console.warn('Cannot open time picker', message);
-        }
   }
 
 
@@ -280,9 +273,9 @@ export default class EditEvents extends React.Component {
               <ScrollView style={{paddingTop: 10}}>
                   <Text style={Styles.title}>Date: {isRequired}</Text>
                   <View style = {[{borderColor:'black', borderRadius: 10, borderWidth: 1}]}>
-                      <DatePickerIOS 
-                          date={this.state.chosenDate}
-                          onDateChange={(date) => {
+                      <RNDateTimePicker 
+                          value={this.state.chosenDate}
+                          onChange={(event, date) => {
                               this.highlightedDate = date
                           }}
                           mode={'date'}
@@ -291,10 +284,10 @@ export default class EditEvents extends React.Component {
                   </View>
                   <Text style={Styles.title}>Start Time: {isRequired}</Text>
                   <View style = {[{borderColor:'black', borderRadius: 10, borderWidth: 1}]}>
-                      <DatePickerIOS 
-                          date={this.state.startTime}
+                      <RNDateTimePicker 
+                          value={this.state.startTime}
                           mode= "time"
-                          onDateChange={(time) => {
+                          onChange={(time) => {
                               this.highlightedStartTime = time
                           }}
                           itemStyle={{height:50}}
@@ -302,10 +295,10 @@ export default class EditEvents extends React.Component {
                   </View>
                   <Text style={Styles.title}>End Time:</Text>
                   <View style = {[{borderColor:'black', borderRadius: 10, borderWidth: 1}]}>
-                      <DatePickerIOS 
-                          date={this.state.endTime}
+                      <RNDateTimePicker 
+                          value={this.state.endTime}
                           mode= "time"
-                          onDateChange={(time) => {
+                          onChange={(time) => {
                               this.highlightedEndTime = time
                           }}
                           itemStyle={{height:50}}
@@ -343,17 +336,7 @@ export default class EditEvents extends React.Component {
   
 
   async getAndroidDatePicker(){
-      try {
-          const {action, year, month, day} = await DatePickerAndroid.open({
-            date: new Date()
-          });
-          if (action == DatePickerAndroid.dateSetAction) {
-            newDate = new Date(year, month, day);
-            this.setState({chosenDate: newDate})
-          }
-        } catch ({code, message}) {
-          console.warn('Cannot open date picker', message);
-        }
+      <RNDateTimePicker mode="date" value={new Date()} />
   }
 
   selectDatePickerFromOS(){
@@ -529,198 +512,6 @@ export default class EditEvents extends React.Component {
                       <Text>{'\n\n'}</Text>
                   </View>
           );
-      }
-  }
-
-   async setStatesForEventData(){
-    getChosenDate = new Date(this.event.attributes.date)
-    getChosenDate.setDate(getChosenDate.getDate() + 1);
-    this.setState({
-        chosenDate: getChosenDate,
-        startTime: new Date(this.event.attributes.time_start),
-        endTime: new Date(this.event.attributes.time_end),
-        selectedTagArray: this.getTags(),
-        location: this.event.attributes.location,
-        categorySelectedName: this.event.attributes.category.name,
-        categorySelectedValue: this.event.relationships.category.data.id,
-        event: this.event.attributes.title,
-        source: this.event.attributes.source,
-        ageRestriction: this.event.attributes.age_restriction,
-        cost: this.event.attributes.cost,
-        description: this.event.attributes.description,
-        address: this.event.attributes.address,
-        locationDetails: this.event.attributes.location_details,
-        id: this.event.id,
-    })
-  }
-
-  getTags(){
-    tagsArray = []
-    if(this.event.attributes.tags){
-      tags = this.event.attributes.tags;
-     for(i = 0; i < tags.length; i++){
-       tagsArray.push(tags[i].name)
-     }
-     return tagsArray
-  }
-}
-
-  retrieveStoredToken = async() => {
-      try {
-        const utoken = await AsyncStorage.getItem('UniqueToken')
-        return utoken
-       } catch (error) {
-          return "NULL"
-       }
-    }
-
-    checkIfStringAttributeIsNull(attribute){
-        if(attribute){
-            return attribute
-        }
-        else{
-            return ""
         }
     }
-
-    checkForEmptyTagArray(tagArray){
-        if(tagArray.length == 0){
-            return null
-        }
-        else{
-            return tagArray
-        }
-    }
-
-  submitEvent(){
-      url = "https://api.muncieevents.com/v1/event/" +this.state.id + "?userToken=" + this.state.userToken + "&apikey="+this.APIKey.getAPIKey()
-
-      start = this.state.startTime.toLocaleTimeString().split(':')
-      startampm = start[2].split(' ')[1]
-      startTime = start[0]+':'+start[1]+startampm.toLowerCase()
-
-      end = this.state.endTime.toLocaleTimeString().split(':')
-      endampm = end[2].split(' ')[1]
-      endTime = end[0]+':'+end[1]+endampm.toLowerCase()
-  
-      chosenDate = this.state.chosenDate.getFullYear() + '-' + ('0' + (this.state.chosenDate.getMonth()+1)).slice(-2) + '-' + ('0' + this.state.chosenDate.getDate()).slice(-2)
-      this.setState({isLoading: true})
-      fetch(url,
-      {method: "PATCH",
-      headers: {
-          Accept: 'application/vnd.api+json',
-          'Content-Type': 'application/json',
-          },
-      body: JSON.stringify({
-          date: chosenDate,
-          start: startTime,
-          time_end: endTime,
-          tag_names: this.checkForEmptyTagArray(this.state.selectedTagArray),
-          location: this.state.location,
-          category_id: this.state.categorySelectedValue,
-          title: this.state.event,
-          source: this.checkIfStringAttributeIsNull(this.state.source),
-          age_restriction: this.checkIfStringAttributeIsNull(this.state.ageRestriction),
-          cost: this.checkIfStringAttributeIsNull(this.state.cost),
-          description: this.state.description,
-          address: this.checkIfStringAttributeIsNull(this.state.address),
-          location_details: this.checkIfStringAttributeIsNull(this.state.locationDetails)
-      })
-  })
-  .then((response) => response.json())
-  .then((responseJson) => this.handelAPIResponse(responseJson))
-    .catch((error) =>{
-       this.setState({failedToLoad:true})
-    })
-  }
-
-  handelAPIResponse(responseJson){
-      try{
-          this.setState({statusMessage: responseJson.errors[0].detail, isLoading: false})
-      }
-      catch(error){
-          this.setState({statusMessage: "Event successfully updated!", eventUpdated: true, isLoading: false})
-      }
-  }
-
-  goToWebsite(){
-    url = "https://muncieevents.com/events/add"
-    Linking.openURL(url)
-}
-
-getDateAndTimes(){
-    formattedDate = ""
-    chosenDate = this.state.chosenDate
-    if(chosenDate){
-        formattedDate = this.getFormattedDate(chosenDate)
-    }
-    ampm = this.state.startTime.getHours() >= 12 ? 'pm' : 'am';
-    hours = this.state.startTime.getHours() % 12
-    if(hours == 0){
-        hours = 12
-    }
-    if(this.state.startTime.getMinutes() < 10){
-        minutes = '0' + this.state.startTime.getMinutes().toString()
-    }
-    else{
-        minutes = this.state.startTime.getMinutes().toString() 
-    }
-    startTime = hours + ':' + minutes + ':' + this.state.startTime.getSeconds() + ' ' + ampm
-    if(startTime){
-        const startTimeFormatted = this.formatTimeForAPI(startTime).toUpperCase().replace("A", " A").replace("P", " P");
-        startTime = startTimeFormatted + " "
-    }
-    else{
-        startTime = ""
-    }
-    if(this.state.endTime){
-        ampm = this.state.endTime.getHours() >= 12 ? 'pm' : 'am';
-        hours = this.state.endTime.getHours() % 12
-        if(hours == 0){
-            hours = 12
-        }
-        if(this.state.endTime.getMinutes() < 10){
-            minutes = '0' + this.state.endTime.getMinutes().toString()
-        }
-        else{
-            minutes = this.state.endTime.getMinutes().toString() 
-        }
-        endTime = hours + ':' + minutes + ':' + this.state.endTime.getSeconds() + ' ' + ampm
-        const endTimeFormatted = this.formatTimeForAPI(endTime).toUpperCase().replace("A", " A").replace("P", " P");
-        endTime = "to " + endTimeFormatted
-    }
-    else{
-        endTime = ""
-    }
-    return formattedDate + startTime + endTime
-}
-
-getFormattedDate(chosenDate){
-    this.DateAndTimeParser = new DateAndTimeParser();
-    monthNumber = chosenDate.getMonth() + 1
-    monthNumberString = ""
-    if(monthNumber < 10){
-        monthNumberString = "0" + monthNumber
-    }
-    else{
-        monthNumberString = "" + monthNumber
-    }
-    chosenMonth = this.DateAndTimeParser.getShorthandMonthByNumber(monthNumberString);
-    
-    dayNumber = chosenDate.getDate()
-    daySuffix = this.DateAndTimeParser.deriveDayNumberSuffix(dayNumber);
-    return chosenMonth + " " + dayNumber + daySuffix + ", " + chosenDate.getFullYear() + " "
-}
-
-formatTimeForAPI(time){
-    splitTime = time.split(':')
-    timeampm = splitTime[2].split(' ')[1]
-    return splitTime[0]+':'+splitTime[1]+timeampm.toLowerCase()
-}
-
-getIsRequiredNotification(){
-    return(
-        <Text style={Styles.requiredField}>*Required</Text>
-    );
-}
 }
