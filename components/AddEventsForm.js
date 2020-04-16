@@ -722,7 +722,13 @@ export default class AddEventsForm extends Component{
         address = this.state.address
         locationDetails = this.state.locationDetails
         chosenDate = this.state.chosenDate
-        image = this.state.image
+       // image = this.state.image
+        
+       // fixes bug were categoryId = "Music"
+       if(categoryID == "Music"){
+            categoryID = 13
+        }
+        
 
         if(userToken){
             url = "https://api.muncieevents.com/v1/event?userToken=" + userToken + "&apikey="+this.APIKey.getAPIKey()
@@ -762,11 +768,28 @@ export default class AddEventsForm extends Component{
                 cost: cost,
                 description: description,
                 address: address,
-                location_details: locationDetails,
-                image: image
+                location_details: locationDetails
+               // image: image
             })
         })
         .then((response) => response.json())
+        .then(console.log(JSON.stringify({
+            url,
+            date: chosenDate,
+            time_start: startTime,
+            time_end: endTime,
+            tag_names: tagNames,
+            location: location,
+            category_id: categoryID,
+            title: title,
+            source: source,
+            age_restriction: ageRestriction,
+            cost: cost,
+            description: description,
+            address: address,
+            location_details: locationDetails
+           // image: image
+        })))
         .then((responseJson) => this.handleAPIResponse(responseJson))
         .catch(error =>{
                         console.log(error)
@@ -777,6 +800,8 @@ export default class AddEventsForm extends Component{
         try{
             statusMessage = (<Text>{responseJson.errors[0].detail}</Text>)
             this.setState({statusMessage: statusMessage})
+            console.log(responseJson.errors)            
+
         }
         catch(error){
             statusMessage = (<View>
