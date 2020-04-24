@@ -36,7 +36,8 @@ export default class EditEvents extends React.Component {
         locationDetails: null,
         id: null,
         failedToLoad: false,
-        eventUpdated: false
+        eventUpdated: false,
+        images: null
     }
     this.event = null
     this.tags=[]
@@ -353,6 +354,48 @@ export default class EditEvents extends React.Component {
       console.log("Event: " + this.state.event)
   }
 
+  getImagePicker(){
+    let { images } = this.state;
+
+    return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Button
+        title="Pick an image from camera roll"
+        onPress={this._pickImage}
+        />
+        {image &&
+        <Image source={{ uri: images }} style={{ width: 200, height: 200 }} />}
+    </View>
+    );
+
+
+}
+
+_pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1
+    });
+
+
+    if (!result.cancelled) {
+      this.setState({ image: result.uri });
+    }
+  };
+
+getPermissionAsync = async () => {
+    if (Constants.platform.ios) {
+      const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+      if (status !== 'granted') {
+        alert('Sorry, we need camera roll permissions to make this work!');
+      }
+    }
+}
+
+
+
   render(){
       if(this.state.isLoading){;
           return(
@@ -380,6 +423,7 @@ export default class EditEvents extends React.Component {
           tagListModal = this.getTagListModal();
           required = this.getIsRequiredNotification();
           dateAndTimes = this.getDateAndTimes();
+          imagePicker = this.getImagePicker();
           return(
                   <View style={{flex:1}}>
                       {IOSDatePickerModal}
@@ -496,8 +540,7 @@ export default class EditEvents extends React.Component {
                           </View>
                           <View style={Styles.formRow}>
                                 <Text style={Styles.formLabel}>Images </Text>
-                                <Text style={Styles.formEntry}>If you would like to upload images for your event, please use the </Text>
-                                <TouchableOpacity onPress={()=>{this.goToWebsite()}}><Text style={{color: 'blue'}}>Muncie Events website.</Text></TouchableOpacity>
+                                    {imagePicker}
                             </View>
                           <View style={Styles.formRow}>
                               <CustomButton
@@ -533,6 +576,7 @@ async setStatesForEventData(){
         address: this.event.attributes.address,
         locationDetails: this.event.attributes.location_details,
         id: this.event.id,
+        images: this.event.attribute.images
     })
   }
 
@@ -606,7 +650,8 @@ async setStatesForEventData(){
           cost: this.checkIfStringAttributeIsNull(this.state.cost),
           description: this.state.description,
           address: this.checkIfStringAttributeIsNull(this.state.address),
-          location_details: this.checkIfStringAttributeIsNull(this.state.locationDetails)
+          location_details: this.checkIfStringAttributeIsNull(this.state.locationDetails),
+          images: this.checkForEmptyTagArray(this.state.images)
       })
   })
   .then((response) => response.json())
