@@ -4,7 +4,6 @@
     "description": "Muncie Events Mobile App",
     "slug": "MuncieEvents",
     "privacy": "public",
-    "sdkVersion": "36.0.0",
     "platforms": [
       "ios",
       "android"
