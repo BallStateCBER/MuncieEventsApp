@@ -1,5 +1,5 @@
 import React, {Component} from 'react';  
-import {View, Button, Image, Platform, Text, Picker, TextInput, Modal, DatePickerAndroid, TimePickerAndroid, DatePickerIOS, FlatList, Switch, ScrollView, AsyncStorage, Linking, TouchableOpacity, KeyboardAvoidingView} from 'react-native';
+import {View, Button, Image, Platform, Text, Picker, TextInput, Modal, FlatList, Switch, ScrollView, AsyncStorage, Linking, TouchableOpacity, KeyboardAvoidingView} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Constants from 'expo-constants';
 import * as Permissions from 'expo-permissions';
@@ -10,7 +10,7 @@ import LoadingScreen from "./LoadingScreen";
 import InternetError from './InternetError';
 import DateAndTimeParser from '../DateAndTimeParser'
 import APIKey from '../APIKey'
-
+import DateTimePicker from '@react-native-community/datetimepicker'; 
 
 export default class AddEventsForm extends Component{
     constructor(props){
@@ -162,7 +162,6 @@ export default class AddEventsForm extends Component{
                         renderItem={({item}) => 
                             this.getSelectableTag(item)
                         }
-                        keyExtractor={(item, index) => index.toString()}
                         ListEmptyComponent={() => this.getNoTagsFoundMessage()}
                         nestedScrollEnabled= {true}
                     />
@@ -267,42 +266,10 @@ export default class AddEventsForm extends Component{
     }
 
     async getAndroidTimePicker(isStartTime){
-        try {
-            const {action, hour, minute} = await TimePickerAndroid.open({
-              hour: 12,
-              minute: 0,
-              is24Hour: false,
-            });
-            if (action !== TimePickerAndroid.dismissedAction) {
-                modifier = "AM"
-                if(minute == 0){
-                    minute += "0"
-                }
-                else if(minute < 10){
-                    minute = "0" + minute
-                }
-                if(hour > 12){
-                    hour -= 12
-                    modifier = "PM"
-                }
-                else if(hour == 0){
-                    hour = 12
-                }
-                else if(hour == 12){
-                    modifier = "PM"
-                }
-                time = hour + ":" + minute + ":" + "00 " + modifier
-                if(isStartTime){
-                    this.setState({startTime: time})
-                }
-                else{
-                    this.setState({endTime: time})
-                }
-            }
-          } catch ({code, message}) {
-            console.warn('Cannot open time picker', message);
-          }
-    }
+        <DateTimePicker 
+        mode="time" value={new Date()}
+        />
+    } 
 
 
     getIOSDatePicker(){
@@ -320,9 +287,9 @@ export default class AddEventsForm extends Component{
                 <ScrollView style={{paddingTop: 10}}>
                     <Text style={Styles.title}>Date {isRequired}</Text>
                     <View style = {[{borderColor:'black', borderRadius: 10, borderWidth: 1}]}>
-                        <DatePickerIOS 
-                            date={this.state.chosenDate}
-                            onDateChange={(date) => {
+                        <DateTimePicker 
+                            value={this.state.chosenDate}
+                            onChange={(date) => {
                                 this.highlightedDate = date
                             }}
                             mode={'date'}
@@ -331,10 +298,10 @@ export default class AddEventsForm extends Component{
                     </View>
                     <Text style={Styles.title}>Start Time {isRequired}</Text>
                     <View style = {[{borderColor:'black', borderRadius: 10, borderWidth: 1}]}>
-                        <DatePickerIOS 
-                            date={new Date()}
+                        <DateTimePicker 
+                            value={new Date()}
                             mode= "time"
-                            onDateChange={(time) => {
+                            onChange={(time) => {
                                 this.highlightedStartTime = time
                             }}
                             itemStyle={{height:50}}
@@ -342,10 +309,10 @@ export default class AddEventsForm extends Component{
                     </View>
                     <Text style={Styles.title}>End Time </Text>
                     <View style = {[{borderColor:'black', borderRadius: 10, borderWidth: 1}]}>
-                        <DatePickerIOS 
-                            date={new Date()}
+                        <DateTimePicker 
+                            value={new Date()}
                             mode= "time"
-                            onDateChange={(time) => {
+                            onChange={(time) => {
                                 this.highlightedEndTime = time
                             }}
                             itemStyle={{height:50}}
@@ -390,20 +357,9 @@ export default class AddEventsForm extends Component{
     }
 
     async getAndroidDatePicker(){
-        try {
-            const {action, year, month, day} = await DatePickerAndroid.open({
-              date: new Date()
-            });
-            if (action == DatePickerAndroid.dateSetAction) {
-              newDate = new Date(year, month, day);
-              this.setState({chosenDate: newDate})
-            }
-          } catch ({code, message}) {
-            console.warn('Cannot open date picker', message);
-          }
+        <DateTimePicker mode="date" value={new Date()}/>
     }
-
-
+        
     selectDatePickerFromOS(){
         if(Platform.OS == "ios"){
             this.setState({IOSModalVisible: true})
@@ -496,6 +452,7 @@ export default class AddEventsForm extends Component{
           quality: 1
         });
     
+        console.log(result);
     
         if (!result.cancelled) {
           this.setState({ image: result.uri });
@@ -723,7 +680,7 @@ export default class AddEventsForm extends Component{
         address = this.state.address
         locationDetails = this.state.locationDetails
         chosenDate = this.state.chosenDate
-        image = this.state.image
+       // image = this.state.image
         
        // fixes bug were categoryId = "Music"
        if(categoryID == "Music"){
@@ -769,20 +726,39 @@ export default class AddEventsForm extends Component{
                 cost: cost,
                 description: description,
                 address: address,
-                location_details: locationDetails,
-                images: image
+                location_details: locationDetails
+               // image: image
             })
         })
         .then((response) => response.json())
+        .then(console.log(JSON.stringify({
+            url,
+            date: chosenDate,
+            time_start: startTime,
+            time_end: endTime,
+            tag_names: tagNames,
+            location: location,
+            category_id: categoryID,
+            title: title,
+            source: source,
+            age_restriction: ageRestriction,
+            cost: cost,
+            description: description,
+            address: address,
+            location_details: locationDetails
+           // image: image
+        })))
         .then((responseJson) => this.handleAPIResponse(responseJson))
         .catch(error =>{
+                        console.log(error)
                         this.setState({failedToLoad:true})});
     }
 
     handleAPIResponse(responseJson){
         try{
             statusMessage = (<Text>{responseJson.errors[0].detail}</Text>)
-            this.setState({statusMessage: statusMessage})           
+            this.setState({statusMessage: statusMessage})
+            console.log(responseJson.errors)            
 
         }
         catch(error){
@@ -817,7 +793,6 @@ export default class AddEventsForm extends Component{
             address: "",
             locationDetails: null,
             eventSubmitted: false,
-            image: null
         })
     }
 
