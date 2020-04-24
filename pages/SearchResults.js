@@ -3,7 +3,6 @@ import EventList from "../EventList"
 import {View, Text} from 'react-native';
 import Styles from './Styles';
 import APICacher from '../APICacher';
-import TopBar from './top_bar';
 import LoadingScreen from '../components/LoadingScreen';
 import InternetError from '../components/InternetError';
 import APIKey from '../APIKey'
@@ -12,9 +11,8 @@ export default class SearchResults extends React.Component{
     constructor(props){
         super(props)
         this.state={isLoading:true,
-        failedToLoad: false}
-        const {navigation} = this.props;
-        this.searchInput = navigation.getParam('searchInput', 'No Results Found')
+        failedToLoad: false
+        }
         this.APIKey = new APIKey();
     }
 
@@ -25,8 +23,11 @@ export default class SearchResults extends React.Component{
     catchError(){
         this.setState({isLoading:false, failedToLoad:true});
     }
+    
+    
 
     render(){
+        const {searchInput} = this.props;
         mainView = null
         if(this.state.isLoading){
             mainView = this.getLoadingView()
@@ -39,11 +40,8 @@ export default class SearchResults extends React.Component{
         }
         return(
             <View style={Styles.wrapper}>
-                <View style={Styles.topBarWrapper}>
-                    <TopBar/>
-                </View>
                 <View style={Styles.mainViewContent}>
-                    <Text style={Styles.title}>Search Results For "{this.searchInput}"</Text>
+                    <Text style={Styles.title}>Search Results For "{searchInput}"</Text>
                     {mainView}
                 </View>
             </View>
@@ -76,9 +74,10 @@ export default class SearchResults extends React.Component{
     }
 
     async _cacheSearchResults(){
+        const {searchInput} = this.props;
         beginningSearchURL = 'https://api.muncieevents.com/v1/events/search?q='
         endingSearchURL = '&apikey='+this.APIKey.getAPIKey()
-        searchURL = beginningSearchURL + this.searchInput + endingSearchURL
+        searchURL = beginningSearchURL + searchInput + endingSearchURL
         key = "SearchResults"
 
         this.APICacher = new APICacher();

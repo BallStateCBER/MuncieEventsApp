@@ -1,8 +1,7 @@
 import React from 'react';
-import {Text, View, ScrollView, Image, AsyncStorage, Alert, Linking, TouchableOpacity, FlatList, BackHandler} from 'react-native';
+import {Text, View, ScrollView, Image, AsyncStorage, Alert, Linking, TouchableOpacity, BackHandler} from 'react-native';
 import AutoHeightWebView from 'react-native-autoheight-webview'
 import DateAndTimeParser from "../DateAndTimeParser";
-import{ withNavigation } from "react-navigation";
 import Styles from './Styles';
 import CustomButton from './CustomButton';
 import * as Animatable from 'react-native-animatable';
@@ -12,6 +11,7 @@ import EditEvents from './EditEvents';
 import APICacher from '../APICacher';
 import APIKey from "../APIKey"
 
+
 // Used in getDescriptionView for width
 const customStyle = `
   <style>
@@ -19,7 +19,7 @@ const customStyle = `
   </style>
 `;
 
-class ExpandedView extends React.Component {
+export default class ExpandedView extends React.Component {
     constructor(props){
         super(props);
         this.dateAndTimeParser = new DateAndTimeParser();
@@ -38,21 +38,20 @@ class ExpandedView extends React.Component {
         this.state={selectedPreviousScreen:false}
         this.APICacher = new APICacher();
         this.APIKey = new APIKey();
-		this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
+		    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
       }
 
     componentDidMount(){
       this.retrieveStoredToken()
-	  BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+	    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
     componentWillUnmount() {
-		BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+		  BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
       }
 	  
 	handleBackButtonClick() {
-    this.props.navigation.goBack(null);
-	this.goBackOnce();
+	  this.goBackOnce();
     return true;
 }
 
@@ -402,6 +401,14 @@ class ExpandedView extends React.Component {
         <AutoHeightWebView
           source={{ html: htmlDescription + customStyle }}
           startInLoadingState = {true}
+          
+          onShouldStartLoadWithRequest={event => {
+            if (event.url.slice(0,4) === 'http') {
+                Linking.openURL(event.url)
+                return false
+            }
+            return true
+        }}
         />
       </View>
      );
@@ -608,4 +615,4 @@ getCategoryImage(eventEntry){
   }
 }
 
-} export default withNavigation(ExpandedView)
+} 

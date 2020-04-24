@@ -1,23 +1,16 @@
 import React from 'react';
-import {Text, View, WebView, Linking, Platform} from 'react-native';
+import { Linking } from 'expo';
+import {Text, View, Platform} from 'react-native';
 import Styles from './Styles';
 import APICacher from '../APICacher';
 import LoadingScreen from '../components/LoadingScreen';
 import TopBar from './top_bar';
 import InternetError from '../components/InternetError';
 import APIKey from '../APIKey'
+import { WebView } from 'react-native-webview';
 
 
-//This script is used to inject working links into the WebView, as the normal method can't be used due to a react native bug.
-const injectScript = `
-  (function () {
-    window.onclick = function(e) {
-      e.preventDefault();
-      window.postMessage(e.target.href);
-      e.stopPropagation()
-    }
-  }());
-`;
+
 
 export default class Widgets extends React.Component {
   constructor(props){
@@ -86,13 +79,7 @@ export default class Widgets extends React.Component {
       .then((response) => this.setState({dataSource: response, isLoading: false}))
   }
 
-  //Opens link when called by WebView
-  onMessage({ nativeEvent }) {
-    const data = nativeEvent.data;
-    if (data !== undefined && data !== null) {
-      Linking.openURL(data);
-    }
-  } 
+  
 
   getWebView(html){
     return(
@@ -103,8 +90,15 @@ export default class Widgets extends React.Component {
         scrollEnabled={true}
         startInLoadingState={false}
         javaScriptEnabled = {true}
-        injectedJavaScript={injectScript}
-        onMessage = {this.onMessage}
+        
+        onShouldStartLoadWithRequest={event => {
+          if (event.url.slice(0,4) === 'http') {
+              Linking.openURL(event.url)
+              return false
+          }
+          return true
+      }}
+
         scalesPageToFit={Platform.OS == "android"}
       />
     )
