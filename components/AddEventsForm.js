@@ -161,6 +161,7 @@ export default class AddEventsForm extends Component{
                         renderItem={({item}) => 
                             this.getSelectableTag(item)
                         }
+                        keyExtractor={(item, index) => index.toString()}
                         ListEmptyComponent={() => this.getNoTagsFoundMessage()}
                         nestedScrollEnabled= {true}
                     />
