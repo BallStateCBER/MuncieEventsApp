@@ -9,7 +9,7 @@ import TopBar from './top_bar';
 import InternetError from '../components/InternetError';
 import APIKey from '../APIKey'
 
-export default class AdvancedSearch extends React.Component {
+export default class Categories extends React.Component {
   constructor(props){
     super(props);
     this.state ={ 
@@ -64,7 +64,7 @@ export default class AdvancedSearch extends React.Component {
   }
 
   render(){
-    title = "Categories"
+    title = " Search Categories"
     if(this.state.isInitialLoading){
       mainView = this.getLoadingScreen();
     }

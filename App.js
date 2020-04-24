@@ -1,5 +1,4 @@
 import HomeScreen from './pages/Home';
-import AdvancedSearch from './pages/AdvancedSearch';
 import GoToDate from './pages/GoToDate';
 import AddEditEvents from './pages/AddEditEvents';
 import About from './pages/About';
@@ -23,7 +22,6 @@ function App() {
     <NavigationContainer>
       <Drawer.Navigator initialRouteName="Home" >
         <Drawer.Screen name="Home" component={HomeScreen} />
-        <Drawer.Screen name="Advanced Search" component={AdvancedSearch} />
         <Drawer.Screen name="Categories" component={Categories} />
         <Drawer.Screen name="Tags" component={Tags} />
         <Drawer.Screen name="Go To Date" component={GoToDate} />

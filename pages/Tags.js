@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, Picker, TouchableOpacity, ScrollView} from 'react-native';
+import {View, Text, Picker} from 'react-native';
 import Styles from './Styles';
 import CustomButton from './CustomButton';
 import EventList from '../EventList';
@@ -9,7 +9,7 @@ import TopBar from './top_bar';
 import InternetError from '../components/InternetError';
 import APIKey from '../APIKey'
 
-export default class AdvancedSearch extends React.Component {
+export default class Tags extends React.Component {
   constructor(props){
     super(props);
     this.state ={ 
@@ -38,10 +38,11 @@ export default class AdvancedSearch extends React.Component {
     return(
       <InternetError onRefresh = {() => {
         this.setState({isInitialLoading:true, failedToLoad:false, isSearching:false})
-        this._fetchTagData().catch(error => this.catchError())
+        Ffrthis._fetchTagData().catch(error => this.catchError())
       }}/>
     );
   }
+ 
 
   async _fetchTagData(){
     key = "Tags"
@@ -64,13 +65,12 @@ export default class AdvancedSearch extends React.Component {
   }
 
   render(){
-    title = "Tags"
+    title = "Search Tags"
     if(this.state.isInitialLoading){
       mainView = this.getLoadingScreen();
     }
     else if(this.state.isSearching){
       mainView = this.getLoadingScreen();
-	  this.returnSearchResults()
       url = this.state.url;
       this._cacheSearchResultsAsync(url).catch(error =>  this.catchError())
     }
@@ -107,9 +107,9 @@ export default class AdvancedSearch extends React.Component {
   getMainView(){
     tagView = this.getTagSearch();
     return(
-      <ScrollView contentContainerStyle={{alignItems: "center", paddingVertical: 20}}>
+      <View>
         {tagView}
-      </ScrollView>
+      </View>
     );
   }
   
@@ -128,20 +128,9 @@ export default class AdvancedSearch extends React.Component {
 
   );}
 
+
   getTagSearch(){
-	tagView = []
-    for(i = 0; i < this.tags.length; i++){
-      tagView.push(<View>
-        <TouchableOpacity onPress={()=>this.setState({tagSelectedValue: <Text>this.tags[i][0]</Text>, isSearching: true})}>
-           <Text style={{color: 'blue', fontSize: 16}}>{this.tags[i][0]}</Text>
-        </TouchableOpacity>
-      </View>)
-    }
-    return tagView
-	
-	
-	
-	/*taglist = this.tags.map( (name) => {
+    taglist = this.tags.map( (name) => {
       return <Picker.Item key={name[0]} value={name[0]} label={name[0]} />
     });
     return( 
@@ -163,14 +152,19 @@ export default class AdvancedSearch extends React.Component {
           text="Search By Tag"
           buttonStyle = {Styles.longButtonStyle}
           textStyle = {Styles.longButtonTextStyle}
-          onPress = {() => this.returnSearchResults()}
+          onPress = {() => this.returnSearchResults("tag")}
           />
-    </View>)*/
+    </View>)
   }
 
-  returnSearchResults(){
+  returnSearchResults(criteria){
+    
     searchURL = 'https://api.muncieevents.com/v1/events/future?withTags[]=' + this.state.tagSelectedValue + "&apikey="+this.APIKey.getAPIKey()
-    this.state.url = searchURL;    
+    this.state.url = searchURL;
+    this.setState({
+      isSearching: true
+    });
+    
   }
 
   async _cacheSearchResultsAsync(searchURL){
