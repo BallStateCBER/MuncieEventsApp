@@ -36,6 +36,15 @@ export default class HomeScreen extends React.Component{
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
         }
 
+        componentDidUpdate(){
+          if (this.state.search == ""){
+            if(this.state.update == true){
+              this.setState({update: false})
+            }
+          }
+
+        }
+
       handleBackButtonClick() {
         this.setState({update: false});
         return true;
@@ -59,12 +68,13 @@ export default class HomeScreen extends React.Component{
         else if(this.state.failedToLoad){
           mainView = this.getErrorView();
         }
-        else if(this.state.update){ 
+        else if(this.state.update && this.state.search){ 
             mainView = <SearchResults searchInput ={this.state.search}/>     
            
         }
         else{
           mainView = this.getHomeView();
+          
         }
         return(
           <View style={Styles.wrapper}>
