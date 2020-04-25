@@ -1,13 +1,17 @@
 import React from 'react';  
-import {View, Platform, Text, Picker, TextInput, Modal, DatePickerAndroid, TimePickerAndroid, RNDateTimePicker, FlatList, Switch, ScrollView, AsyncStorage, TouchableOpacity, KeyboardAvoidingView} from 'react-native';
+import {View, Platform, Text, Image, Button, Picker, TextInput, Modal, FlatList, Switch,  AsyncStorage, KeyboardAvoidingView} from 'react-native';
 import Styles from './Styles';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import APICacher from '../APICacher'
 import CustomButton from './CustomButton';
 import LoadingScreen from "../components/LoadingScreen";
 import InternetError from '../components/InternetError';
 import DateAndTimeParser from '../DateAndTimeParser'
 import APIKey from '../APIKey'
+import * as ImagePicker from 'expo-image-picker';
+import Constants from 'expo-constants';
+import * as Permissions from 'expo-permissions';
+import DateTimePicker from "react-native-modal-datetime-picker";
+
 
 export default class EditEvents extends React.Component {
     constructor(props){
@@ -37,7 +41,11 @@ export default class EditEvents extends React.Component {
         id: null,
         failedToLoad: false,
         eventUpdated: false,
-        images: null
+        image: null,
+        images: null,
+        isDateTimePickerVisible: false,
+        isTimePickerVisible: false,
+        isEndTimePickerVisible: false
     }
     this.event = null
     this.tags=[]
@@ -74,13 +82,13 @@ export default class EditEvents extends React.Component {
   }   
   
   async _fetchTagData(){
-      key = "Tags"
-      url = "https://api.muncieevents.com/v1/tags?apikey="+this.APIKey.getAPIKey()
-      await this._refreshData(key, url)
-  
-      this.tags = await this.APICacher._getJSONFromStorage(key)
-      this.tags = this.tags.map((tag) => {return [tag.attributes.name, tag.id]})
-      this.setState({tagSelectedValue: this.tags[0]})
+    key = "Tags"
+    url = "https://api.muncieevents.com/v1/tags?apikey="+this.APIKey.getAPIKey()
+    await this._refreshData(key, url)
+
+    this.tags = await this.APICacher._getJSONFromStorage(key)
+    this.tags = this.tags.map((tag) => {return [tag.attributes.name, tag.id]})
+    this.setState({tagSelectedValue: this.tags[0]})
   }
 
   async _refreshData(key, url){
@@ -127,69 +135,72 @@ export default class EditEvents extends React.Component {
 
   }
 
+  
+
   getSelectableTagsList(){
-      fullTagList = this.tags.map((name) =>{
-          return(name[0])
-      });
-      if(this.state.filter){
-          filteredTagList = fullTagList.filter(tag => tag.includes(this.state.filter.toLowerCase()))
-      }
-      else{
-          filteredTagList = fullTagList
-      }
-      return(
-          <View style={{flex: 1}}>
-              <View>
-                  <Text style={Styles.title}>Select Tags</Text>
-              </View>
-              <View style={{flex: .1, paddingBottom: 35}}>
-              {/*Second view for just padding was added to avoid spacing issues with the filter textinput and the clear button*/}
-                  <View style={{paddingBottom: 5}}>
-                      <TextInput               
-                          onChangeText={(userInput) => this.setState({filter: userInput})}
-                          style={[Styles.textBox]}
-                          ref={input => this.filterInput = input}
-                          placeholder="Filter tags"
-                          underlineColorAndroid="transparent"
-                      />
-                  </View>
-                  <CustomButton
-                      text="Clear Filter"
-                      buttonStyle={[Styles.mediumButtonStyle, {alignSelf:"center"}]}
-                      textStyle={Styles.mediumButtonTextStyle}
-                      onPress={() => {
-                          this.filterInput.clear()
-                          this.setState({filter:null})
-                      }}
-                  />
-              </View>
-              <View style={{flex: .80, backgroundColor:'#eee'}}>
-                  <FlatList
-                      data={filteredTagList}
-                      renderItem={({item}) => 
-                          this.getSelectableTag(item)
-                      }
-                      keyExtractor={(item,index) => item + index}
-                      ListEmptyComponent={() => this.getNoTagsFoundMessage()}
-                      nestedScrollEnabled= {true}
-                  />
-              </View>
-              {/*Due to issues with how flatlists use padding, there needed to be a seperate view that was just padding.*/}
-              <View style={{paddingBottom:5}}></View>
-              <View style={{alignItems:"center", flex: .1}}>
-                  <CustomButton
-                      text="Close"
-                      buttonStyle={[Styles.mediumButtonStyle]}
-                      textStyle={Styles.mediumButtonTextStyle}
-                      onPress={() => {
-                          this.filterInput.clear()
-                          this.setState({tagModalVisable: false, filter: null})}
-                      }
-                  />
-              </View>
-          </View>
-      );
-  }
+    fullTagList = this.tags.map((name) =>{
+        return(name[0])
+    });
+    if(this.state.filter){
+        filteredTagList = fullTagList.filter(tag => tag.includes(this.state.filter.toLowerCase()))
+    }
+    else{
+        filteredTagList = fullTagList
+    }
+    return(
+        <View style={{flex: 1}}>
+            <View>
+                <Text style={Styles.title}>Select Tags</Text>
+            </View>
+            <View style={{flex: .1, paddingBottom: 35}}>
+            {/*Second view for just padding was added to avoid spacing issues with the filter textinput and the clear button*/}
+                <View style={{paddingBottom: 5}}>
+                    <TextInput               
+                        onChangeText={(userInput) => this.setState({filter: userInput})}
+                        style={[Styles.textBox]}
+                        ref={input => this.filterInput = input}
+                        placeholder="Filter tags"
+                        underlineColorAndroid="transparent"
+                    />
+                </View>
+                <CustomButton
+                    text="Clear Filter"
+                    buttonStyle={[Styles.mediumButtonStyle, {alignSelf:"center"}]}
+                    textStyle={Styles.mediumButtonTextStyle}
+                    onPress={() => {
+                        this.filterInput.clear()
+                        this.setState({filter:null})
+                    }}
+                />
+            </View>
+            <View style={{flex: .80, backgroundColor:'#eee'}}>
+                <FlatList
+                    data={filteredTagList}
+                    renderItem={({item}) => 
+                        this.getSelectableTag(item)
+                    }
+                    keyExtractor={(item, index) => index.toString()}
+                    ListEmptyComponent={() => this.getNoTagsFoundMessage()}
+                    nestedScrollEnabled= {true}
+                />
+            </View>
+            {/*Due to issues with how flatlists use padding, there needed to be a seperate view that was just padding.*/}
+            <View style={{paddingBottom:5}}></View>
+            <View style={{alignItems:"center", flex: .1}}>
+                <CustomButton
+                    text="Close"
+                    buttonStyle={[Styles.mediumButtonStyle]}
+                    textStyle={Styles.mediumButtonTextStyle}
+                    onPress={() => {
+                        this.filterInput.clear()
+                        this.setState({tagModalVisable: false, filter: null})}
+                    }
+                />
+            </View>
+        </View>
+    );
+}
+
 
   getSelectableTag(tag){
       isTagAlreadySelected = this.isInSelectedTagList(tag)
@@ -228,117 +239,10 @@ export default class EditEvents extends React.Component {
       this.setState({selectedTagArray: selectedTagList})
   }
 
-  getAndroidTimeFields(){
-      if(Platform.OS == "android"){
-          return(
-              <View style={Styles.formRow}>
-                  <Text style ={Styles.formLabel}>Time </Text>
-                  <CustomButton 
-                      buttonStyle={Styles.mediumButtonStyle}
-                      textStyle={Styles.mediumButtonTextStyle}
-                      text="Select Time"
-                      onPress = {() => this.getAndroidTimePicker()}
-                  />
-              </View>
-          );
-      }
-      else{
-          //return nothing if on IOS
-          return(
-              <View></View>
-          );
-      }
-  }
 
-  async getAndroidTimePicker(){
-      <RNDateTimePicker mode="time" value={new Date()}></RNDateTimePicker>
-          if (action !== TimePickerAndroid.onChange) {
-            time = hour + ":" + minute
-            this.setState({startTime: time})
-          }
-  }
-
-
-  getIOSDatePicker(){
-      highlightedDate = this.state.chosenDate
-      highlightedStartTime = this.state.startTime
-      highlightedEndTime = this.state.endTime
-      isRequired = this.getIsRequiredNotification();
-      return(
-          <Modal
-              animationType ="slide"
-              transparent={false}
-              visible= {this.state.IOSModalVisible}
-              onRequestClose={() => {
-          }}>
-              <ScrollView style={{paddingTop: 10}}>
-                  <Text style={Styles.title}>Date: {isRequired}</Text>
-                  <View style = {[{borderColor:'black', borderRadius: 10, borderWidth: 1}]}>
-                      <RNDateTimePicker 
-                          value={this.state.chosenDate}
-                          onChange={(event, date) => {
-                              this.highlightedDate = date
-                          }}
-                          mode={'date'}
-                          itemStyle={{height:50}}
-                      />
-                  </View>
-                  <Text style={Styles.title}>Start Time: {isRequired}</Text>
-                  <View style = {[{borderColor:'black', borderRadius: 10, borderWidth: 1}]}>
-                      <RNDateTimePicker 
-                          value={this.state.startTime}
-                          mode= "time"
-                          onChange={(time) => {
-                              this.highlightedStartTime = time
-                          }}
-                          itemStyle={{height:50}}
-                      />
-                  </View>
-                  <Text style={Styles.title}>End Time:</Text>
-                  <View style = {[{borderColor:'black', borderRadius: 10, borderWidth: 1}]}>
-                      <RNDateTimePicker 
-                          value={this.state.endTime}
-                          mode= "time"
-                          onChange={(time) => {
-                              this.highlightedEndTime = time
-                          }}
-                          itemStyle={{height:50}}
-                      />
-                  </View>
-                  {/*select button*/}
-                  <CustomButton
-                      text="Select"
-                      buttonStyle={Styles.longButtonStyle}
-                      textStyle={Styles.longButtonTextStyle}
-                      onPress = {() => {
-                          if(!this.highlightedDate){
-                                this.highlightedDate = this.state.chosenDate
-                          }
-                          if(!this.highlightedStartTime){
-                            this.highlightedStartTime = this.state.startTime
-                          }
-                          if(!this.highlightedEndTime){
-                            this.highlightedEndTime = this.state.endTime
-                          }
-                          this.setState({chosenDate: this.highlightedDate, startTime: this.highlightedStartTime, endTime: this.highlightedEndTime, IOSModalVisible: false})
-                  }}/>
-                  {/*cancel button*/}
-                  <CustomButton
-                      text="Cancel"
-                      buttonStyle={Styles.longButtonStyle}
-                      textStyle={Styles.longButtonTextStyle}
-                      onPress = {() => {
-                          this.setState({IOSModalVisible: false})
-                  }}/>
-              </ScrollView>
-          </Modal>
-      );
-  }
   
 
-  async getAndroidDatePicker(){
-      <RNDateTimePicker mode="date" value={new Date()} />
-  }
+  
 
   selectDatePickerFromOS(){
       if(Platform.OS == "ios"){
@@ -355,7 +259,7 @@ export default class EditEvents extends React.Component {
   }
 
   getImagePicker(){
-    let { images } = this.state;
+    let { image } = this.state;
 
     return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -364,7 +268,7 @@ export default class EditEvents extends React.Component {
         onPress={this._pickImage}
         />
         {image &&
-        <Image source={{ uri: images }} style={{ width: 200, height: 200 }} />}
+        <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
     </View>
     );
 
@@ -394,6 +298,47 @@ getPermissionAsync = async () => {
     }
 }
 
+showDateTimePicker = () => {
+    this.setState({ isDateTimePickerVisible: true });
+  };
+
+  hideDateTimePicker = () => {
+    this.setState({ isDateTimePickerVisible: false });
+  };
+
+  handleDatePicked = date => {
+    this.setState({chosenDate: date})
+    this.hideDateTimePicker();
+  };
+
+  showTimePicker = () => {
+    this.setState({ isTimePickerVisible: true });
+  };
+
+  hideTimePicker = () => {
+    this.setState({ isTimePickerVisible: false });
+  };
+
+  handleTimePicked = date => {
+    console.log(date)
+    this.setState({startTime: date})
+    this.hideTimePicker();
+  };
+
+  showEndTimePicker = () => {
+    this.setState({ isEndTimePickerVisible: true });
+  };
+
+  hideEndTimePicker = () => {
+    this.setState({ isEndTimePickerVisible: false });
+  };
+
+  handleEndTimePicked = date => {
+    console.log(date)
+    this.setState({endTime: date})
+    this.hideTimePicker();
+  };
+
 
 
   render(){
@@ -418,15 +363,13 @@ getPermissionAsync = async () => {
                 </View>)
       }
       else{
-          IOSDatePickerModal = this.getIOSDatePicker();
-          androidTimePicker = this.getAndroidTimeFields();
+    
           tagListModal = this.getTagListModal();
           required = this.getIsRequiredNotification();
           dateAndTimes = this.getDateAndTimes();
           imagePicker = this.getImagePicker();
           return(
                   <View style={{flex:1}}>
-                      {IOSDatePickerModal}
                       {tagListModal}
                       <View style={Styles.formRow}>
                           <Text style={Styles.formLabel}>Title {required}</Text>
@@ -442,15 +385,62 @@ getPermissionAsync = async () => {
                           {this.getCategoryPicker()}
                       </View>
                       <View style={Styles.formRow}>
-                          <Text style={Styles.formLabel}>Date {required}</Text>
-                          <CustomButton
-                              text="Select Date"
-                              buttonStyle={[Styles.mediumButtonStyle]}
-                              textStyle={Styles.mediumButtonTextStyle}
-                              onPress={() => this.selectDatePickerFromOS()}
-                          />
+                          
+                      <View>
+                            <Text style ={Styles.formLabel}>Date  {required}</Text>
+                                <CustomButton
+                                text="Select Date"
+                                onPress={this.showDateTimePicker}
+                                buttonStyle={Styles.mediumButtonStyle}
+                                textStyle={Styles.mediumButtonTextStyle}
+                                />
+                                <DateTimePicker
+                                    isVisible={this.state.isDateTimePickerVisible}
+                                    onConfirm={this.handleDatePicked}
+                                    onCancel={this.hideDateTimePicker}
+                                />
+                            </View>
+                            <View>
+                            <Text style ={Styles.formLabel}>Start Time  {required}</Text>
+                            <CustomButton
+                                text="Start Time"
+                                onPress={this.showTimePicker}
+                                buttonStyle={Styles.mediumButtonStyle}
+                                textStyle={Styles.mediumButtonTextStyle}
+                                />
+                                <DateTimePicker
+                                isVisible={this.state.isTimePickerVisible}
+                                mode = "time"
+                                onConfirm={this.handleTimePicked}
+                                onCancel={this.hideTimePicker}
+                                />
+                            </View>
+                            <View>
+                            <Text style ={Styles.formLabel}>End Time</Text>
+                                <CustomButton
+                                    text="End Time"
+                                    onPress={this.showEndTimePicker}
+                                    buttonStyle={Styles.mediumButtonStyle}
+                                    textStyle={Styles.mediumButtonTextStyle}
+                                    />
+                                    {/*slight padding for buttons*/}
+                                    <Text>   </Text>
+                                    <CustomButton
+                                        text="Clear Time"
+                                        buttonStyle={Styles.mediumButtonStyle}
+                                        textStyle={Styles.mediumButtonTextStyle}
+                                        onPress = {() => this.setState({endTime: null})}           
+                                    />
+                                    <DateTimePicker
+                                        isVisible={this.state.isEndTimePickerVisible}
+                                        mode = "time"
+                                        onConfirm={this.handleEndTimePicked}
+                                        onCancel={this.hideEndTimePicker}
+                                    />
+                            </View>
+
                       </View>
-                      {androidTimePicker}
+
                       <View style={Styles.formRow}>
                             <Text style={Styles.formLabel}>Chosen Date and Time</Text>
                             <Text style={Styles.formEntry}>{dateAndTimes}</Text>
@@ -539,10 +529,8 @@ getPermissionAsync = async () => {
                               />
                           </View>
                           <View style={Styles.formRow}>
-                                <Text style={Styles.formLabel}>Images </Text>
-                                    {imagePicker}
-                            </View>
-                          <View style={Styles.formRow}>
+                          <Text>{this.state.statusMessage}</Text>
+                            <Text>{'\n\n'}</Text>
                               <CustomButton
                                   text="Submit"
                                   buttonStyle={Styles.longButtonStyle}
@@ -551,8 +539,6 @@ getPermissionAsync = async () => {
                               />
                           </View>
                       </KeyboardAvoidingView>
-                      <Text>{this.state.statusMessage}</Text>
-                      <Text>{'\n\n'}</Text>
                   </View>
           );
         }
@@ -576,7 +562,7 @@ async setStatesForEventData(){
         address: this.event.attributes.address,
         locationDetails: this.event.attributes.location_details,
         id: this.event.id,
-        images: this.event.attribute.images
+        images: this.event.relationships.images
     })
   }
 
@@ -618,16 +604,24 @@ async setStatesForEventData(){
         }
     }
 
+    formatTime(date){
+        var hours = date.getHours();
+        var minutes = date.getMinutes();
+        var ampm = hours >= 12 ? 'pm' : 'am';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
+        minutes = minutes < 10 ? '0'+minutes : minutes;
+        var strTime = hours + ':' + minutes + ' ' + ampm;
+        return strTime;
+    }
+
+    
   submitEvent(){
       url = "https://api.muncieevents.com/v1/event/" +this.state.id + "?userToken=" + this.state.userToken + "&apikey="+this.APIKey.getAPIKey()
 
-      start = this.state.startTime.toLocaleTimeString().split(':')
-      startampm = start[2].split(' ')[1]
-      startTime = start[0]+':'+start[1]+startampm.toLowerCase()
+      startTime = this.formatTime(this.state.startTime)
 
-      end = this.state.endTime.toLocaleTimeString().split(':')
-      endampm = end[2].split(' ')[1]
-      endTime = end[0]+':'+end[1]+endampm.toLowerCase()
+      endTime = this.formatTime(this.state.endTime)
   
       chosenDate = this.state.chosenDate.getFullYear() + '-' + ('0' + (this.state.chosenDate.getMonth()+1)).slice(-2) + '-' + ('0' + this.state.chosenDate.getDate()).slice(-2)
       this.setState({isLoading: true})
@@ -641,7 +635,7 @@ async setStatesForEventData(){
           date: chosenDate,
           start: startTime,
           time_end: endTime,
-          tag_names: this.checkForEmptyTagArray(this.state.selectedTagArray),
+          tag_names: this.state.selectedTagArray,
           location: this.state.location,
           category_id: this.state.categorySelectedValue,
           title: this.state.event,
@@ -651,7 +645,7 @@ async setStatesForEventData(){
           description: this.state.description,
           address: this.checkIfStringAttributeIsNull(this.state.address),
           location_details: this.checkIfStringAttributeIsNull(this.state.locationDetails),
-          images: this.checkForEmptyTagArray(this.state.images)
+          images: this.state.images
       })
   })
   .then((response) => response.json())
@@ -719,8 +713,61 @@ getDateAndTimes(){
     else{
         endTime = ""
     }
+    
     return formattedDate + startTime + endTime
 }
+
+getTimes(){
+    formattedDate = ""
+    chosenDate = this.state.chosenDate
+    timeArray = []
+    if(chosenDate){
+        formattedDate = this.getFormattedDate(chosenDate)
+    }
+    ampm = this.state.startTime.getHours() >= 12 ? 'pm' : 'am';
+    hours = this.state.startTime.getHours() % 12
+    if(hours == 0){
+        hours = 12
+    }
+    if(this.state.startTime.getMinutes() < 10){
+        minutes = '0' + this.state.startTime.getMinutes().toString()
+    }
+    else{
+        minutes = this.state.startTime.getMinutes().toString() 
+    }
+    startTime = hours + ':' + minutes + ':' + this.state.startTime.getSeconds() + ' ' + ampm
+    if(startTime){
+        const startTimeFormatted = this.formatTimeForAPI(startTime).toUpperCase().replace("A", " A").replace("P", " P");
+        timeArray.append(startTimeFormatted)
+        startTime = startTimeFormatted + " "
+    }
+    else{
+        startTime = ""
+    }
+    if(this.state.endTime){
+        ampm = this.state.endTime.getHours() >= 12 ? 'pm' : 'am';
+        hours = this.state.endTime.getHours() % 12
+        if(hours == 0){
+            hours = 12
+        }
+        if(this.state.endTime.getMinutes() < 10){
+            minutes = '0' + this.state.endTime.getMinutes().toString()
+        }
+        else{
+            minutes = this.state.endTime.getMinutes().toString() 
+        }
+        endTime = hours + ':' + minutes + ':' + this.state.endTime.getSeconds() + ' ' + ampm
+        const endTimeFormatted = this.formatTimeForAPI(endTime).toUpperCase().replace("A", " A").replace("P", " P");
+        timeArray.append(endTimeFormatted)
+        endTime = "to " + endTimeFormatted
+    }
+    else{
+        endTime = ""
+    }
+    
+    return timeArray
+}
+
 
 getFormattedDate(chosenDate){
     this.DateAndTimeParser = new DateAndTimeParser();
