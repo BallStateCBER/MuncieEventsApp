@@ -29,6 +29,7 @@
     "react-native-autoheight-webview": "^1.4.2",
     "react-native-elements": "^1.2.7",
     "react-native-gesture-handler": "~1.6.0",
+    "react-native-modal-datetime-picker": "^8.5.4",
     "react-native-pell-rich-editor": "^1.0.6",
     "react-native-reanimated": "~1.7.0",
     "react-native-safe-area-context": "0.7.3",
