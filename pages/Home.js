@@ -58,6 +58,16 @@ export default class HomeScreen extends React.Component{
         this.setState({ search });
       };
 
+      searchButton(){
+        if(this.state.update){
+            this.setState({update: false})
+        }
+        else{
+          this.setState({update: true})
+        }
+      }
+      
+
       
 
       render(){
@@ -93,7 +103,7 @@ export default class HomeScreen extends React.Component{
                   />
                   <Icon name="ios-search" style={Styles.iosSearch} size={34}
                     onPress={() => {
-                      this.setState({update: true})
+                      this.searchButton()
                       Keyboard.dismiss()
                      }}
                   />
