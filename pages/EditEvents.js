@@ -1,5 +1,5 @@
 import React from 'react';  
-import {View, Platform, Text, Image, Button, Picker, TextInput, Modal, FlatList, Switch,  AsyncStorage, KeyboardAvoidingView} from 'react-native';
+import {View, Platform, Text, TouchableOpacity, Picker, TextInput, Modal, FlatList, Switch,  AsyncStorage, KeyboardAvoidingView} from 'react-native';
 import Styles from './Styles';
 import APICacher from '../APICacher'
 import CustomButton from './CustomButton';
@@ -7,9 +7,6 @@ import LoadingScreen from "../components/LoadingScreen";
 import InternetError from '../components/InternetError';
 import DateAndTimeParser from '../DateAndTimeParser'
 import APIKey from '../APIKey'
-import * as ImagePicker from 'expo-image-picker';
-import Constants from 'expo-constants';
-import * as Permissions from 'expo-permissions';
 import DateTimePicker from "react-native-modal-datetime-picker";
 
 
@@ -41,8 +38,6 @@ export default class EditEvents extends React.Component {
         id: null,
         failedToLoad: false,
         eventUpdated: false,
-        image: null,
-        images: null,
         isDateTimePickerVisible: false,
         isTimePickerVisible: false,
         isEndTimePickerVisible: false
@@ -258,45 +253,7 @@ export default class EditEvents extends React.Component {
       console.log("Event: " + this.state.event)
   }
 
-  getImagePicker(){
-    let { image } = this.state;
-
-    return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Button
-        title="Pick an image from camera roll"
-        onPress={this._pickImage}
-        />
-        {image &&
-        <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
-    </View>
-    );
-
-
-}
-
-_pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1
-    });
-
-
-    if (!result.cancelled) {
-      this.setState({ image: result.uri });
-    }
-  };
-
-getPermissionAsync = async () => {
-    if (Constants.platform.ios) {
-      const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
-      if (status !== 'granted') {
-        alert('Sorry, we need camera roll permissions to make this work!');
-      }
-    }
-}
+ 
 
 showDateTimePicker = () => {
     this.setState({ isDateTimePickerVisible: true });
@@ -320,7 +277,6 @@ showDateTimePicker = () => {
   };
 
   handleTimePicked = date => {
-    console.log(date)
     this.setState({startTime: date})
     this.hideTimePicker();
   };
@@ -334,7 +290,6 @@ showDateTimePicker = () => {
   };
 
   handleEndTimePicked = date => {
-    console.log(date)
     this.setState({endTime: date})
     this.hideTimePicker();
   };
@@ -367,7 +322,6 @@ showDateTimePicker = () => {
           tagListModal = this.getTagListModal();
           required = this.getIsRequiredNotification();
           dateAndTimes = this.getDateAndTimes();
-          imagePicker = this.getImagePicker();
           return(
                   <View style={{flex:1}}>
                       {tagListModal}
@@ -529,6 +483,11 @@ showDateTimePicker = () => {
                               />
                           </View>
                           <View style={Styles.formRow}>
+                                <Text style={Styles.formLabel}>Image </Text>
+                                <Text style={Styles.formEntry}>If you would like to upload images for your event, please use the </Text>
+                            <TouchableOpacity onPress={()=>{this.goToWebsite()}}><Text style={{color: 'blue'}}>Muncie Events website.</Text></TouchableOpacity>
+                            </View>
+                          <View style={Styles.formRow}>
                           <Text>{this.state.statusMessage}</Text>
                             <Text>{'\n\n'}</Text>
                               <CustomButton
@@ -562,7 +521,6 @@ async setStatesForEventData(){
         address: this.event.attributes.address,
         locationDetails: this.event.attributes.location_details,
         id: this.event.id,
-        images: this.event.relationships.images
     })
   }
 
@@ -645,7 +603,6 @@ async setStatesForEventData(){
           description: this.state.description,
           address: this.checkIfStringAttributeIsNull(this.state.address),
           location_details: this.checkIfStringAttributeIsNull(this.state.locationDetails),
-          images: this.state.images
       })
   })
   .then((response) => response.json())
@@ -717,56 +674,7 @@ getDateAndTimes(){
     return formattedDate + startTime + endTime
 }
 
-getTimes(){
-    formattedDate = ""
-    chosenDate = this.state.chosenDate
-    timeArray = []
-    if(chosenDate){
-        formattedDate = this.getFormattedDate(chosenDate)
-    }
-    ampm = this.state.startTime.getHours() >= 12 ? 'pm' : 'am';
-    hours = this.state.startTime.getHours() % 12
-    if(hours == 0){
-        hours = 12
-    }
-    if(this.state.startTime.getMinutes() < 10){
-        minutes = '0' + this.state.startTime.getMinutes().toString()
-    }
-    else{
-        minutes = this.state.startTime.getMinutes().toString() 
-    }
-    startTime = hours + ':' + minutes + ':' + this.state.startTime.getSeconds() + ' ' + ampm
-    if(startTime){
-        const startTimeFormatted = this.formatTimeForAPI(startTime).toUpperCase().replace("A", " A").replace("P", " P");
-        timeArray.append(startTimeFormatted)
-        startTime = startTimeFormatted + " "
-    }
-    else{
-        startTime = ""
-    }
-    if(this.state.endTime){
-        ampm = this.state.endTime.getHours() >= 12 ? 'pm' : 'am';
-        hours = this.state.endTime.getHours() % 12
-        if(hours == 0){
-            hours = 12
-        }
-        if(this.state.endTime.getMinutes() < 10){
-            minutes = '0' + this.state.endTime.getMinutes().toString()
-        }
-        else{
-            minutes = this.state.endTime.getMinutes().toString() 
-        }
-        endTime = hours + ':' + minutes + ':' + this.state.endTime.getSeconds() + ' ' + ampm
-        const endTimeFormatted = this.formatTimeForAPI(endTime).toUpperCase().replace("A", " A").replace("P", " P");
-        timeArray.append(endTimeFormatted)
-        endTime = "to " + endTimeFormatted
-    }
-    else{
-        endTime = ""
-    }
-    
-    return timeArray
-}
+
 
 
 getFormattedDate(chosenDate){

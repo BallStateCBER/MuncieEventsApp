@@ -1,6 +1,6 @@
 import React from 'react';
 import EventList from "../EventList"
-import {TextInput, View, Text, BackHandler, Keyboard} from 'react-native';
+import {TextInput, View, BackHandler, Keyboard} from 'react-native';
 import Styles from './Styles';
 import APICacher from '../APICacher';
 import TopBar from './top_bar';
@@ -20,7 +20,8 @@ export default class HomeScreen extends React.Component{
     this.state = {isLoading: true,
                   failedToLoad: false,
                   search: '',
-                  update: false};
+                  update: false,
+                  icon: "ios-search"};
     this._startupCachingAsync = this._startupCachingAsync.bind(this);
     this.APICacher = new APICacher();
     this.APIKey = new APIKey();
@@ -39,7 +40,7 @@ export default class HomeScreen extends React.Component{
         componentDidUpdate(){
           if (this.state.search == ""){
             if(this.state.update == true){
-              this.setState({update: false})
+              this.setState({update: false, icon: "ios-search"})
             }
           }
 
@@ -61,9 +62,11 @@ export default class HomeScreen extends React.Component{
       searchButton(){
         if(this.state.update){
             this.setState({update: false})
+            this.setState({icon: "ios-search"})
         }
         else{
           this.setState({update: true})
+          this.setState({icon: "ios-close"})
         }
       }
       
@@ -92,7 +95,7 @@ export default class HomeScreen extends React.Component{
               <TopBar/>
             </View>
             
-                <View style={[Styles.topBarContent, {flex:.06}]}>
+                <View style={[Styles.topBarContent, {flex:.07}]}>
                   <TextInput
                     placeholder=' Search Muncie Events'
                     value={search} 
@@ -101,7 +104,7 @@ export default class HomeScreen extends React.Component{
                     onChangeText={this.updateSearch}
                     showLoading='true'
                   />
-                  <Icon name="ios-search" style={Styles.iosSearch} size={34}
+                  <Icon name={this.state.icon} style={Styles.iosSearch} size={34}
                     onPress={() => {
                       this.searchButton()
                       Keyboard.dismiss()
