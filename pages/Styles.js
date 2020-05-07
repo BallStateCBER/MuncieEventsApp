@@ -5,7 +5,7 @@ export default StyleSheet.create({
         textAlign:"center",
         fontSize:30,
         fontWeight:"bold",
-        color:'#cb532b',
+        color:'#cb532b'
     },
 
     menuIcon:{
@@ -127,10 +127,15 @@ export default StyleSheet.create({
     },
     
     topBarWrapper: {
-        flex:.15,
+        flex:.1,
         justifyContent: 'center',
         alignItems: 'center'
     },
+
+    fixToText: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+      },
 
     topBarContent: {
         height: 45,

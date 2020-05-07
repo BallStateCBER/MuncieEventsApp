@@ -4,3 +4,4 @@ node_modules/**/*
 npm-debug.*
 /APIKey.js
 .idea/*
+MuncieEventsApp.iml

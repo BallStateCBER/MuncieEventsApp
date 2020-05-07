@@ -1,15 +1,13 @@
 import React from 'react';
-import{ withNavigation } from "react-navigation";
 import DateAndTimeParser from "./DateAndTimeParser";
 import {View, Text, TouchableOpacity, FlatList, Image} from 'react-native';
-import * as Animatable from 'react-native-animatable';
 import Styles from './pages/Styles';
 import ExpandedView from './pages/ExpandedView';
 import APICacher from './APICacher';
 import PropTypes from 'prop-types';
 import LoadingScreen from './components/LoadingScreen';
 
-class EventList extends React.Component {
+export default class EventList extends React.Component {
     constructor(props){
         super(props);
         this.state ={
@@ -104,7 +102,7 @@ class EventList extends React.Component {
           imageURL = eventEntry.attributes.images[0].tiny_url
         }
         return(
-          <Animatable.View animation = "slideInRight" duration = {700}>
+          <View>
             <Text style={Styles.dateText}>
               {date}
             </Text>           
@@ -117,7 +115,7 @@ class EventList extends React.Component {
                {this.getURLImage(imageURL)}
                </View>
              </TouchableOpacity>
-            </Animatable.View>
+            </View>
         )
       }
 
@@ -257,7 +255,6 @@ class EventList extends React.Component {
          }
        }
 } 
-export default withNavigation(EventList);
 
 EventList.propTypes = {
   useSearchResults: PropTypes.bool

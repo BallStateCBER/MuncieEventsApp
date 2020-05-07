@@ -1,35 +1,42 @@
 import HomeScreen from './pages/Home';
-import AdvancedSearch from './pages/AdvancedSearch';
 import GoToDate from './pages/GoToDate';
 import AddEditEvents from './pages/AddEditEvents';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import LogInRegister from './pages/LogInRegister';
 import Widgets from './pages/Widgets';
-import SearchResults from './pages/SearchResults'
-import SearchResultsPasser from './pages/SearchResultsPasser';
-import {createDrawerNavigator} from 'react-navigation';
-import ExpandedView from './pages/ExpandedView';
 import Categories from './pages/Categories';
 import Tags from './pages/Tags';
+import * as React from 'react';
+import { NavigationContainer, DrawerActions } from '@react-navigation/native';
+import { createDrawerNavigator, DrawerContentScrollView,  DrawerItemList,  DrawerItem} from '@react-navigation/drawer';
 
-const App = createDrawerNavigator({
-  Home: { screen: HomeScreen },
-  "Advanced Search": { screen: AdvancedSearch },
-  "Categories": {screen: Categories},
-  "Tags": {screen: Tags},
-  "Go To Date": {screen: GoToDate},
-  "Add Event": {screen: AddEditEvents},
-  About: {screen: About},
-  Contact: {screen: Contact},
-  "My Profile": {screen: LogInRegister},
-  Widgets: {screen: Widgets},
-  "Search Results": {screen: SearchResults, navigationOptions: {drawerLabel: () => null}},
-  "Search Results Passer": {screen: SearchResultsPasser, navigationOptions: {drawerLabel: () => null}},
-  "Expanded View":{screen: ExpandedView, navigationOptions: {drawerLabel: () => null}}},
-  {
-    initialRouteName:"Home"
-  }
-);
-  
+
+const Drawer = createDrawerNavigator();
+
+
+
+
+function App() {
+  return (
+    <NavigationContainer>
+      <Drawer.Navigator initialRouteName="Home" >
+        <Drawer.Screen name="Home" component={HomeScreen} />
+        <Drawer.Screen name="Categories" component={Categories} />
+        <Drawer.Screen name="Tags" component={Tags} />
+        <Drawer.Screen name="Go To Date" component={GoToDate} />
+        <Drawer.Screen name="Add Event" component={AddEditEvents} />
+        <Drawer.Screen name="About" component={About} />
+        <Drawer.Screen name="Contact" component={Contact} />
+        <Drawer.Screen name="My Profile" component={LogInRegister} />
+        <Drawer.Screen name="Widgets" component={Widgets} />
+      </Drawer.Navigator>
+    </NavigationContainer>
+  );
+}
+
+
+
+
 export default App;
+

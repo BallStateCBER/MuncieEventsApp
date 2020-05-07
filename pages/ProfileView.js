@@ -82,8 +82,10 @@ export default class ProfileView extends React.Component {
       }
 
       getMailingListView(){
+        title = "Mailing List"
         return(
               <View style={{flex:1}}>
+                <Text style={Styles.title}>{title}</Text>
                   <CustomButton 
                       text="Go Back" 
                       buttonStyle = {Styles.longButtonStyle}
@@ -185,8 +187,10 @@ export default class ProfileView extends React.Component {
       } 
 
       getProfileInformation(){
+          title = "My Profile"
           return(
               <View style={{flex:0.35}}>
+              <Text style={Styles.title}>{title}</Text>
               <View style={Styles.buttonBuffer}/>
                 <CustomButton 
                     text="Change Password" 
