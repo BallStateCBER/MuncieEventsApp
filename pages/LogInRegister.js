@@ -211,14 +211,14 @@ export default class LogInRegister extends React.Component {
       try {
         const tkn = await AsyncStorage.getItem('Token')
         const utoken = await AsyncStorage.getItem('UniqueToken')
-        this.determineLoginStatus(tkn, utoken);
+        this.setLoginStatus(tkn, utoken);
        } catch (error) {
-          this.determineLoginStatus()
+          this.setLoginStatus()
           return "NULL"
        }
     }
 
-    determineLoginStatus(tkn, utoken){
+    setLoginStatus(tkn, utoken){
       if(tkn && utoken){
         this.setState({isLoading: false, userid: tkn, uniqueToken: utoken, isLoggedIn: true})
       }
