@@ -8,8 +8,8 @@ import Widgets from './pages/Widgets';
 import Categories from './pages/Categories';
 import Tags from './pages/Tags';
 import * as React from 'react';
-import { NavigationContainer, DrawerActions } from '@react-navigation/native';
-import { createDrawerNavigator, DrawerContentScrollView,  DrawerItemList,  DrawerItem} from '@react-navigation/drawer';
+import {NavigationContainer} from '@react-navigation/native';
+import {createDrawerNavigator} from '@react-navigation/drawer';
 
 const Drawer = createDrawerNavigator();
 
