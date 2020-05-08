@@ -11,11 +11,7 @@ import * as React from 'react';
 import { NavigationContainer, DrawerActions } from '@react-navigation/native';
 import { createDrawerNavigator, DrawerContentScrollView,  DrawerItemList,  DrawerItem} from '@react-navigation/drawer';
 
-
 const Drawer = createDrawerNavigator();
-
-
-
 
 function App() {
   return (
@@ -35,8 +31,4 @@ function App() {
   );
 }
 
-
-
-
 export default App;
-
