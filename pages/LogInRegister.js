@@ -174,9 +174,9 @@ export default class LogInRegister extends React.Component {
     }
     
     logUserIn = async(dataSource) => {
-      uid = ""
-      utkn = ""
-      credentialsAreCorrect = false
+      let uid = ""
+      let utkn = ""
+      let credentialsAreCorrect = false
       try{
        uid = dataSource.data.id;
        utkn = dataSource.data.attributes.token
