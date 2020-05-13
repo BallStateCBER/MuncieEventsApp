@@ -30,6 +30,7 @@ export default class LogInRegister extends React.Component {
     }
     
     render() {
+      let mainView;
       if(this.state.failedToLoad){
         mainView = this.getErrorMessage();
       }
@@ -83,7 +84,7 @@ export default class LogInRegister extends React.Component {
     }
 
     getLoginSequence(){
-      profileInfo = "";
+      let profileInfo = "";
       if(this.state.isLoggedIn){
           profileInfo = this.showProfileInfo();
       }
