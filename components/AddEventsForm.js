@@ -54,13 +54,13 @@ export default class AddEventsForm extends Component{
     async _fetchTagAndCategoryData(){
         await this._fetchCategoryData();
         await this._fetchTagData();
-        utoken = await this.retrieveStoredToken();
+        const utoken = await this.retrieveStoredToken();
         this.setState({isLoading: false, userToken: utoken});
     }
 
     async _fetchCategoryData(){
-        key = "Categories"
-        url = "https://api.muncieevents.com/v1/categories?apikey="+this.APIKey.getAPIKey()
+        const key = "Categories"
+        const url = "https://api.muncieevents.com/v1/categories?apikey="+this.APIKey.getAPIKey()
         await this._refreshData(key, url)
     
         this.categories = await this.APICacher._getJSONFromStorage(key)
@@ -70,8 +70,8 @@ export default class AddEventsForm extends Component{
     }   
     
     async _fetchTagData(){
-        key = "Tags"
-        url = "https://api.muncieevents.com/v1/tags?apikey="+this.APIKey.getAPIKey()
+        const key = "Tags"
+        const url = "https://api.muncieevents.com/v1/tags?apikey="+this.APIKey.getAPIKey()
         await this._refreshData(key, url)
     
         this.tags = await this.APICacher._getJSONFromStorage(key)
@@ -80,7 +80,7 @@ export default class AddEventsForm extends Component{
     }
 
     async _refreshData(key, url){
-        hasAPIData = await this.APICacher._hasAPIData(key)
+        const hasAPIData = await this.APICacher._hasAPIData(key)
         if(hasAPIData){
           await this.APICacher._refreshJSONFromStorage(key, url)
         }
@@ -90,7 +90,7 @@ export default class AddEventsForm extends Component{
       }
 
     getCategoryPicker(){
-        categorylist = this.categories.map( (name) => {
+        const categorylist = this.categories.map( (name) => {
             return <Picker.Item key={name[0]} value={name[1]} label={name[0]} />
         });
         return(
@@ -109,7 +109,7 @@ export default class AddEventsForm extends Component{
     }
 
     getTagListModal(){
-        tagFlatList = this.getSelectableTagsList();
+        const tagFlatList = this.getSelectableTagsList();
         return(
             <Modal
             animationType ="slide"
@@ -123,9 +123,10 @@ export default class AddEventsForm extends Component{
     }
 
     getSelectableTagsList(){
-        fullTagList = this.tags.map((name) =>{
+        const fullTagList = this.tags.map((name) =>{
             return(name[0])
         });
+        let filteredTagList;
         if(this.state.filter){
             filteredTagList = fullTagList.filter(tag => tag.includes(this.state.filter.toLowerCase()))
         }
@@ -187,7 +188,7 @@ export default class AddEventsForm extends Component{
     }
 
     getSelectableTag(tag){
-        isTagAlreadySelected = this.isInSelectedTagList(tag)
+        const isTagAlreadySelected = this.isInSelectedTagList(tag)
         return(
             <View style={{flexDirection: 'row'}}>
                 <Switch
@@ -200,7 +201,7 @@ export default class AddEventsForm extends Component{
     }
 
     isInSelectedTagList(tag){
-        selectedTagList = this.state.selectedTagArray
+        const selectedTagList = this.state.selectedTagArray
         return selectedTagList.includes(tag)
     }
 
@@ -211,8 +212,8 @@ export default class AddEventsForm extends Component{
     }
 
     updateSelectedTagList(tag){
-        selectedTagList = this.state.selectedTagArray
-        tagNeedsRemoved = this.isInSelectedTagList(tag)
+        const selectedTagList = this.state.selectedTagArray
+        const tagNeedsRemoved = this.isInSelectedTagList(tag)
         if(tagNeedsRemoved){
             index = selectedTagList.indexOf(tag)
             selectedTagList.splice(index, 1)
@@ -227,7 +228,10 @@ export default class AddEventsForm extends Component{
 
     setTime = (event, date) => {
         if (date === undefined) {
-            modifier = "AM"
+            let modifier = "AM"
+            let minute;
+            let hour;
+            let time;
             if(minute == 0){
                 minute += "0"
             }
@@ -317,12 +321,12 @@ export default class AddEventsForm extends Component{
     }
 
     getDateAndTimes(){
-        formattedDate = ""
-        chosenDate = this.state.chosenDate
+        let formattedDate = ""
+        const chosenDate = this.state.chosenDate
         if(chosenDate){
             formattedDate = this.getFormattedDate(chosenDate)
         }
-        startTime = this.state.startTime
+        let startTime = this.state.startTime
         if(startTime){
             const startTimeFormatted = this.formatTimeForAPI(startTime).toUpperCase().replace("A", " A").replace("P", " P");
             startTime = startTimeFormatted + " "
@@ -330,7 +334,7 @@ export default class AddEventsForm extends Component{
         else{
             startTime = ""
         }
-        endTime = this.state.endTime
+        let endTime = this.state.endTime
         if(endTime){
             const endTimeFormatted = this.formatTimeForAPI(endTime).toUpperCase();
             endTime = "to " + endTimeFormatted
@@ -343,23 +347,23 @@ export default class AddEventsForm extends Component{
 
     getFormattedDate(chosenDate){
         this.DateAndTimeParser = new DateAndTimeParser();
-        monthNumber = chosenDate.getMonth() + 1
-        monthNumberString = ""
+        const monthNumber = chosenDate.getMonth() + 1
+        let monthNumberString = ""
         if(monthNumber < 10){
             monthNumberString = "0" + monthNumber
         }
         else{
             monthNumberString = "" + monthNumber
         }
-        chosenMonth = this.DateAndTimeParser.getShorthandMonthByNumber(monthNumberString);
+        const chosenMonth = this.DateAndTimeParser.getShorthandMonthByNumber(monthNumberString);
         
-        dayNumber = chosenDate.getDate()
-        daySuffix = this.DateAndTimeParser.deriveDayNumberSuffix(dayNumber);
+        const dayNumber = chosenDate.getDate()
+        const daySuffix = this.DateAndTimeParser.deriveDayNumberSuffix(dayNumber);
         return chosenMonth + " " + dayNumber + daySuffix + ", " + chosenDate.getFullYear() + " "
     }
 
     goToWebsite(){
-        url = "https://muncieevents.com/events/add"
+        const url = "https://muncieevents.com/events/add"
         Linking.openURL(url)
     }
 
@@ -387,9 +391,9 @@ export default class AddEventsForm extends Component{
                 </View>)
         }
         else{
-            tagListModal = this.getTagListModal();
-            required = this.getIsRequiredNotification();
-            dateAndTimes = this.getDateAndTimes();
+            const tagListModal = this.getTagListModal();
+            const required = this.getIsRequiredNotification();
+            const dateAndTimes = this.getDateAndTimes();
             return(
                     <View style={{flex:1}}>
                         {tagListModal}
@@ -575,55 +579,55 @@ export default class AddEventsForm extends Component{
             this.submitEvent()            
         }
         else{
-            statusMessage = (<Text>ERROR: One or more required fields not completed</Text>)
+            const statusMessage = (<Text>ERROR: One or more required fields not completed</Text>)
             this.setState({statusMessage: statusMessage})
         }
     }
       
     requiredFieldsAreFilled(){
-        chosenDate = this.state.chosenDate;
-        startTime = this.state.startTime;
-        endTime = this.state.endTime;
-        tagNames = this.state.selectedTagArray;
-        location = this.state.location;
-        categoryID = this.state.categorySelectedValue;
-        title = this.state.event;
-        source = this.state.source;
-        ageRestriction = this.state.ageRestriction;
-        cost = this.state.cost;
-        description = this.state.description;
-        address = this.state.address;
-        locationDetails = this.state.locationDetails;
+        const chosenDate = this.state.chosenDate;
+        const startTime = this.state.startTime;
+        const endTime = this.state.endTime;
+        const tagNames = this.state.selectedTagArray;
+        const location = this.state.location;
+        const categoryID = this.state.categorySelectedValue;
+        const title = this.state.event;
+        const source = this.state.source;
+        const ageRestriction = this.state.ageRestriction;
+        const cost = this.state.cost;
+        const description = this.state.description;
+        const address = this.state.address;
+        const locationDetails = this.state.locationDetails;
         return (categoryID && title && chosenDate && startTime 
             && description && location);
     }
 
     formatTimeForAPI(date){
-        var hours = date.getHours();
-        var minutes = date.getMinutes();
-        var ampm = hours >= 12 ? 'pm' : 'am';
+        let hours = date.getHours();
+        let minutes = date.getMinutes();
+        const ampm = hours >= 12 ? 'pm' : 'am';
         hours = hours % 12;
         hours = hours ? hours : 12; // the hour '0' should be '12'
         minutes = minutes < 10 ? '0'+minutes : minutes;
-        var strTime = hours + ':' + minutes + ' ' + ampm;
+        const strTime = hours + ':' + minutes + ' ' + ampm;
         return strTime;
     }
 
     submitEvent(){
-        userToken = this.state.userToken
-        startTime = this.state.startTime
-        endTime = this.state.endTime
-        tagNames = this.state.selectedTagArray
-        location = this.state.location
-        categoryID = this.state.categorySelectedValue
-        title =this.state.event
-        source = this.state.source
-        ageRestriction = this.state.ageRestriction
-        cost = this.state.cost
-        description = this.state.description
-        address = this.state.address
-        locationDetails = this.state.locationDetails
-        chosenDate = this.state.chosenDate
+        const userToken = this.state.userToken
+        let startTime = this.state.startTime
+        let endTime = this.state.endTime
+        const tagNames = this.state.selectedTagArray
+        const location = this.state.location
+        let categoryID = this.state.categorySelectedValue
+        const title =this.state.event
+        const source = this.state.source
+        const ageRestriction = this.state.ageRestriction
+        const cost = this.state.cost
+        const description = this.state.description
+        const address = this.state.address
+        const locationDetails = this.state.locationDetails
+        let chosenDate = this.state.chosenDate
        
         
         
@@ -635,7 +639,8 @@ export default class AddEventsForm extends Component{
             categoryID = 13
         }
         
-
+        let url;
+        let imageurl;
         if(userToken){
             url = "https://api.muncieevents.com/v1/event?userToken=" + userToken + "&apikey="+this.APIKey.getAPIKey()
             imageurl = "https://api.muncieevents.com/v1/image?userToken=" + userToken + "&apikey="+this.APIKey.getAPIKey()
@@ -693,6 +698,7 @@ export default class AddEventsForm extends Component{
     
 
     handleAPIResponse(responseJson){
+        let statusMessage;
         try{
             statusMessage = (<Text>{responseJson.errors[0].detail}</Text>)
             this.setState({statusMessage: statusMessage})            
