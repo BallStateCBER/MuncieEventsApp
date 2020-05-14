@@ -9,6 +9,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import TopBar from './top_bar';
 import InternetError from '../components/InternetError';
 import APIKey from '../APIKey'
+import {UserContext} from '../context/UserContext';
 
 export default class LogInRegister extends React.Component {
     constructor(props){
@@ -192,6 +193,7 @@ export default class LogInRegister extends React.Component {
         await AsyncStorage.setItem('UniqueToken', utkn);
         await AsyncStorage.setItem('Token', uid);
         this.setState({isLoggedIn: true, uniqueToken: utkn, userid: uid});
+        this.context.updateUserContext(dataSource.data.attributes.name, utkn);
       } catch (error) {
         console.log("Error storing login information");
       }
@@ -203,6 +205,7 @@ export default class LogInRegister extends React.Component {
         await AsyncStorage.removeItem('UniqueToken');
         await AsyncStorage.removeItem('Token');
         this.setState({isLoggedIn: false, statusMessage: "You are not logged in", userid: "", uniqueToken: ""});
+        this.context.updateUserContext(null, null);
       } catch (error) {
         console.log("Error logging user out");
       }
@@ -247,3 +250,5 @@ export default class LogInRegister extends React.Component {
       })
     }
 }
+
+LogInRegister.contextType = UserContext;

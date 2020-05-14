@@ -8,8 +8,7 @@ import InternetError from './InternetError';
 import DateAndTimeParser from '../DateAndTimeParser'
 import APIKey from '../APIKey'
 import DateTimePicker from "react-native-modal-datetime-picker";
-
-
+import {UserContext} from '../context/UserContext';
 
 export default class AddEventsForm extends Component{
     constructor(props){
@@ -614,7 +613,7 @@ export default class AddEventsForm extends Component{
     }
 
     submitEvent(){
-        const userToken = this.state.userToken
+        const userToken = this.props.userToken
         let startTime = this.state.startTime
         let endTime = this.state.endTime
         const tagNames = this.state.selectedTagArray
@@ -769,7 +768,7 @@ If you press the button multiple times the error goes away.
 
 getImagePicker(){
 
-        if(this.state.userToken){
+        if(this.props.userToken){
             return (
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                 <Button
@@ -795,7 +794,7 @@ getImagePicker(){
 
     _pickImage = async () => {
 
-                imageurl = "https://api.muncieevents.com/v1/user/images?userToken=" + this.state.userToken + "&apikey="+this.APIKey.getAPIKey()
+                imageurl = "https://api.muncieevents.com/v1/user/images?userToken=" + this.props.userToken + "&apikey="+this.APIKey.getAPIKey()
                 
                 
 
@@ -905,7 +904,7 @@ async function takeAndUploadPhotoAsync() {
   // Assume "file" is the name of the form field the server expects
   formData.append('file', { uri: localUri, name: filename, type });
 
-  imageurl = 'https://api.muncieevents.com/v1/image?userToken=' + this.state.userToken + "&apikey="+this.APIKey.getAPIKey()
+  imageurl = 'https://api.muncieevents.com/v1/image?userToken=' + this.props.userToken + "&apikey="+this.APIKey.getAPIKey()
 
   return await fetch(YOUR_SERVER_URL, {
     method: 'POST',
@@ -918,3 +917,5 @@ async function takeAndUploadPhotoAsync() {
 
 
 */
+
+AddEventsForm.contextType = UserContext;
