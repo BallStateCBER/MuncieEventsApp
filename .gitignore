@@ -1,5 +1,7 @@
 node_modules/**/*
 .expo/*
+.expo-shared/assets.json
 npm-debug.*
 /APIKey.js
 .idea/*
+MuncieEventsApp.iml

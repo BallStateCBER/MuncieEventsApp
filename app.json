@@ -4,9 +4,11 @@
     "description": "Muncie Events Mobile App",
     "slug": "MuncieEvents",
     "privacy": "public",
-    "sdkVersion": "34.0.0",
-    "platforms": ["ios", "android"],
-    "version": "3.0.0",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "version": "3.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -23,12 +25,17 @@
     "ios": {
       "bundleIdentifier": "com.muncieevents.muncieeventsapp"
     },
+    "androidStatusBar": {
+      "backgroundColor": "#000000"
+    },
     "android": {
-      "versionCode": 3,
+      "versionCode": 4,
       "package": "com.muncieevents.MuncieEvents",
       "permissions": [
         "CAMERA",
-        "MANAGE_DOCUMENTS"
+        "MANAGE_DOCUMENTS",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE"
       ]
     }
   }

@@ -1,5 +1,5 @@
 import React, {Component} from 'react';  
-import {View, Platform, Text, Picker, TextInput, Modal, DatePickerAndroid, TimePickerAndroid, DatePickerIOS, FlatList, Switch, ScrollView, AsyncStorage, Linking, TouchableOpacity} from 'react-native';
+import {View, Text, Picker, TextInput, Modal, FlatList, Switch,  AsyncStorage, Linking, TouchableOpacity, KeyboardAvoidingView} from 'react-native';
 import Styles from '../pages/Styles';
 import APICacher from '../APICacher'
 import CustomButton from '../pages/CustomButton';
@@ -7,6 +7,8 @@ import LoadingScreen from "./LoadingScreen";
 import InternetError from './InternetError';
 import DateAndTimeParser from '../DateAndTimeParser'
 import APIKey from '../APIKey'
+import DateTimePicker from "react-native-modal-datetime-picker";
+import {UserContext} from '../context/UserContext';
 
 export default class AddEventsForm extends Component{
     constructor(props){
@@ -35,6 +37,9 @@ export default class AddEventsForm extends Component{
             locationDetails: null,
             failedToLoad: false,
             eventSubmitted: false,
+            isDateTimePickerVisible: false,
+            isTimePickerVisible: false,
+            isEndTimePickerVisible: false
         }
         this.tags=[]
         this.APICacher = new APICacher();
@@ -48,23 +53,24 @@ export default class AddEventsForm extends Component{
     async _fetchTagAndCategoryData(){
         await this._fetchCategoryData();
         await this._fetchTagData();
-        utoken = await this.retrieveStoredToken();
+        const utoken = await this.retrieveStoredToken();
         this.setState({isLoading: false, userToken: utoken});
     }
 
     async _fetchCategoryData(){
-        key = "Categories"
-        url = "https://api.muncieevents.com/v1/categories?apikey="+this.APIKey.getAPIKey()
+        const key = "Categories"
+        const url = "https://api.muncieevents.com/v1/categories?apikey="+this.APIKey.getAPIKey()
         await this._refreshData(key, url)
     
         this.categories = await this.APICacher._getJSONFromStorage(key)
+
         this.categories = this.categories.map((category) => {return [category.attributes.name, category.id]})
         this.setState({categorySelectedValue: this.categories[1][0], categorySelectedName:this.categories[0][0]})
     }   
     
     async _fetchTagData(){
-        key = "Tags"
-        url = "https://api.muncieevents.com/v1/tags?apikey="+this.APIKey.getAPIKey()
+        const key = "Tags"
+        const url = "https://api.muncieevents.com/v1/tags?apikey="+this.APIKey.getAPIKey()
         await this._refreshData(key, url)
     
         this.tags = await this.APICacher._getJSONFromStorage(key)
@@ -73,7 +79,7 @@ export default class AddEventsForm extends Component{
     }
 
     async _refreshData(key, url){
-        hasAPIData = await this.APICacher._hasAPIData(key)
+        const hasAPIData = await this.APICacher._hasAPIData(key)
         if(hasAPIData){
           await this.APICacher._refreshJSONFromStorage(key, url)
         }
@@ -83,7 +89,7 @@ export default class AddEventsForm extends Component{
       }
 
     getCategoryPicker(){
-        categorylist = this.categories.map( (name) => {
+        const categorylist = this.categories.map( (name) => {
             return <Picker.Item key={name[0]} value={name[1]} label={name[0]} />
         });
         return(
@@ -102,7 +108,7 @@ export default class AddEventsForm extends Component{
     }
 
     getTagListModal(){
-        tagFlatList = this.getSelectableTagsList();
+        const tagFlatList = this.getSelectableTagsList();
         return(
             <Modal
             animationType ="slide"
@@ -116,9 +122,10 @@ export default class AddEventsForm extends Component{
     }
 
     getSelectableTagsList(){
-        fullTagList = this.tags.map((name) =>{
+        const fullTagList = this.tags.map((name) =>{
             return(name[0])
         });
+        let filteredTagList;
         if(this.state.filter){
             filteredTagList = fullTagList.filter(tag => tag.includes(this.state.filter.toLowerCase()))
         }
@@ -157,6 +164,7 @@ export default class AddEventsForm extends Component{
                         renderItem={({item}) => 
                             this.getSelectableTag(item)
                         }
+                        keyExtractor={(item, index) => index.toString()}
                         ListEmptyComponent={() => this.getNoTagsFoundMessage()}
                         nestedScrollEnabled= {true}
                     />
@@ -179,7 +187,7 @@ export default class AddEventsForm extends Component{
     }
 
     getSelectableTag(tag){
-        isTagAlreadySelected = this.isInSelectedTagList(tag)
+        const isTagAlreadySelected = this.isInSelectedTagList(tag)
         return(
             <View style={{flexDirection: 'row'}}>
                 <Switch
@@ -192,7 +200,7 @@ export default class AddEventsForm extends Component{
     }
 
     isInSelectedTagList(tag){
-        selectedTagList = this.state.selectedTagArray
+        const selectedTagList = this.state.selectedTagArray
         return selectedTagList.includes(tag)
     }
 
@@ -203,8 +211,8 @@ export default class AddEventsForm extends Component{
     }
 
     updateSelectedTagList(tag){
-        selectedTagList = this.state.selectedTagArray
-        tagNeedsRemoved = this.isInSelectedTagList(tag)
+        const selectedTagList = this.state.selectedTagArray
+        const tagNeedsRemoved = this.isInSelectedTagList(tag)
         if(tagNeedsRemoved){
             index = selectedTagList.indexOf(tag)
             selectedTagList.splice(index, 1)
@@ -215,196 +223,89 @@ export default class AddEventsForm extends Component{
         this.setState({selectedTagArray: selectedTagList})
     }
 
-    getAndroidTimeFields(){
-        if(Platform.OS == "android"){
-            isRequired = this.getIsRequiredNotification();
-            return(
-                <View>
-                    <View style={Styles.formRow}>
-                        <Text style ={Styles.formLabel}>Start Time  {isRequired}</Text>
-                        <CustomButton 
-                            buttonStyle={Styles.mediumButtonStyle}
-                            textStyle={Styles.mediumButtonTextStyle}
-                            text="Select Time"
-                            onPress = {() => this.getAndroidTimePicker(true)}
-                        />
-                    </View>
-                    <View style={Styles.formRow}>
-                        <Text style ={Styles.formLabel}>End Time </Text>
-                        <View style={{flexDirection:"row"}}>
-                            <CustomButton 
-                                buttonStyle={Styles.mediumButtonStyle}
-                                textStyle={Styles.mediumButtonTextStyle}
-                                text="Select Time"
-                                onPress = {() => this.getAndroidTimePicker(false)}
-                            />
-                            {/*slight padding for buttons*/}
-                            <Text>   </Text>
-                            <CustomButton
-                                text="Clear Time"
-                                buttonStyle={Styles.mediumButtonStyle}
-                                textStyle={Styles.mediumButtonTextStyle}
-                                onPress = {() => this.setState({endTime: null})}           
-                            />
-                        </View>  
-                    </View>
-                </View>
-                
-            );
-        }
-        else{
-            //return nothing if on IOS
-            return(
-                <View></View>
-            );
-        }
-    }
+    
 
-    async getAndroidTimePicker(isStartTime){
-        try {
-            const {action, hour, minute} = await TimePickerAndroid.open({
-              hour: 12,
-              minute: 0,
-              is24Hour: false,
-            });
-            if (action !== TimePickerAndroid.dismissedAction) {
-                modifier = "AM"
-                if(minute == 0){
-                    minute += "0"
-                }
-                else if(minute < 10){
-                    minute = "0" + minute
-                }
-                if(hour > 12){
-                    hour -= 12
-                    modifier = "PM"
-                }
-                else if(hour == 0){
-                    hour = 12
-                }
-                else if(hour == 12){
-                    modifier = "PM"
-                }
-                time = hour + ":" + minute + ":" + "00 " + modifier
-                if(isStartTime){
-                    this.setState({startTime: time})
-                }
-                else{
-                    this.setState({endTime: time})
-                }
+    setTime = (event, date) => {
+        if (date === undefined) {
+            let modifier = "AM"
+            let minute;
+            let hour;
+            let time;
+            if(minute == 0){
+                minute += "0"
             }
-          } catch ({code, message}) {
-            console.warn('Cannot open time picker', message);
-          }
-    }
-
-
-    getIOSDatePicker(){
-        highlightedDate = new Date()
-        highlightedStartTime = new Date()
-        highlightedEndTime = new Date()
-        isRequired = this.getIsRequiredNotification();
-        return(
-            <Modal
-                animationType ="slide"
-                transparent={false}
-                visible= {this.state.IOSModalVisible}
-                onRequestClose={() => {
-            }}>
-                <ScrollView style={{paddingTop: 10}}>
-                    <Text style={Styles.title}>Date {isRequired}</Text>
-                    <View style = {[{borderColor:'black', borderRadius: 10, borderWidth: 1}]}>
-                        <DatePickerIOS 
-                            date={this.state.chosenDate}
-                            onDateChange={(date) => {
-                                this.highlightedDate = date
-                            }}
-                            mode={'date'}
-                            itemStyle={{height:50}}
-                        />
-                    </View>
-                    <Text style={Styles.title}>Start Time {isRequired}</Text>
-                    <View style = {[{borderColor:'black', borderRadius: 10, borderWidth: 1}]}>
-                        <DatePickerIOS 
-                            date={new Date()}
-                            mode= "time"
-                            onDateChange={(time) => {
-                                this.highlightedStartTime = time
-                            }}
-                            itemStyle={{height:50}}
-                        />
-                    </View>
-                    <Text style={Styles.title}>End Time </Text>
-                    <View style = {[{borderColor:'black', borderRadius: 10, borderWidth: 1}]}>
-                        <DatePickerIOS 
-                            date={new Date()}
-                            mode= "time"
-                            onDateChange={(time) => {
-                                this.highlightedEndTime = time
-                            }}
-                            itemStyle={{height:50}}
-                        />
-                    </View>
-                    {/*select button*/}
-                    <CustomButton
-                        text="Select"
-                        buttonStyle={Styles.longButtonStyle}
-                        textStyle={Styles.longButtonTextStyle}
-                        onPress = {() => {
-                            start = this.highlightedStartTime
-                            end = this.highlightedEndTime
-                            if(!this.highlightedDate){
-                                this.highlightedDate = this.state.chosenDate
-                            }
-                            if(!this.highlightedStartTime){
-                                start = this.state.startTime
-                            }
-                            if(!this.highlightedEndTime){
-                                end = this.state.endTime
-                            }
-                            if(this.highlightedStartTime){
-                                start = this.highlightedStartTime.toLocaleTimeString()
-                            }
-                            if(this.highlightedEndTime){
-                                end = this.highlightedEndTime.toLocaleTimeString()
-                            }
-                            this.setState({chosenDate: this.highlightedDate, startTime: start, endTime: end, IOSModalVisible: false})
-                    }}/>
-                    {/*cancel button*/}
-                    <CustomButton
-                        text="Cancel"
-                        buttonStyle={Styles.longButtonStyle}
-                        textStyle={Styles.longButtonTextStyle}
-                        onPress = {() => {
-                            this.setState({IOSModalVisible: false})
-                    }}/>
-                </ScrollView>
-            </Modal>
-        );
-    }
-
-    async getAndroidDatePicker(){
-        try {
-            const {action, year, month, day} = await DatePickerAndroid.open({
-              date: new Date()
-            });
-            if (action == DatePickerAndroid.dateSetAction) {
-              newDate = new Date(year, month, day);
-              this.setState({chosenDate: newDate})
+            else if(minute < 10){
+                minute = "0" + minute
             }
-          } catch ({code, message}) {
-            console.warn('Cannot open date picker', message);
-          }
-    }
+            if(hour > 12){
+                hour -= 12
+                modifier = "PM"
+            }
+            else if(hour == 0){
+                hour = 12
+            }
+            else if(hour == 12){
+                modifier = "PM"
+            }
+            time = hour + ":" + minute + ":" + "00 " + modifier
+            if(isStartTime){
+                this.setState({startTime: time})
+            }
+            else{
+                this.setState({endTime: time})
+            }
+        }
+      };
+
+
+
+      showDateTimePicker = () => {
+        this.setState({ isDateTimePickerVisible: true });
+      };
+    
+      hideDateTimePicker = () => {
+        this.setState({ isDateTimePickerVisible: false });
+      };
+    
+      handleDatePicked = date => {
+        this.setState({chosenDate: date})
+        this.hideDateTimePicker();
+      };
+
+      showTimePicker = () => {
+        this.setState({ isTimePickerVisible: true });
+      };
+    
+      hideTimePicker = () => {
+        this.setState({ isTimePickerVisible: false });
+      };
+    
+      handleTimePicked = date => {
+        this.setState({startTime: date})
+        this.hideTimePicker();
+      };
+
+      showEndTimePicker = () => {
+        this.setState({ isEndTimePickerVisible: true });
+      };
+    
+      hideEndTimePicker = () => {
+        this.setState({ isEndTimePickerVisible: false });
+      };
+    
+      handleEndTimePicked = date => {
+        this.setState({endTime: date})
+        this.hideTimePicker();
+      };
+
+
+    
 
 
     selectDatePickerFromOS(){
-        if(Platform.OS == "ios"){
+        
             this.setState({IOSModalVisible: true})
-        }
-        else{
-            this.getAndroidDatePicker()
-        }
+       
     }
 
     submitForm(){
@@ -419,12 +320,12 @@ export default class AddEventsForm extends Component{
     }
 
     getDateAndTimes(){
-        formattedDate = ""
-        chosenDate = this.state.chosenDate
+        let formattedDate = ""
+        const chosenDate = this.state.chosenDate
         if(chosenDate){
             formattedDate = this.getFormattedDate(chosenDate)
         }
-        startTime = this.state.startTime
+        let startTime = this.state.startTime
         if(startTime){
             const startTimeFormatted = this.formatTimeForAPI(startTime).toUpperCase().replace("A", " A").replace("P", " P");
             startTime = startTimeFormatted + " "
@@ -432,7 +333,7 @@ export default class AddEventsForm extends Component{
         else{
             startTime = ""
         }
-        endTime = this.state.endTime
+        let endTime = this.state.endTime
         if(endTime){
             const endTimeFormatted = this.formatTimeForAPI(endTime).toUpperCase();
             endTime = "to " + endTimeFormatted
@@ -445,25 +346,27 @@ export default class AddEventsForm extends Component{
 
     getFormattedDate(chosenDate){
         this.DateAndTimeParser = new DateAndTimeParser();
-        monthNumber = chosenDate.getMonth() + 1
-        monthNumberString = ""
+        const monthNumber = chosenDate.getMonth() + 1
+        let monthNumberString = ""
         if(monthNumber < 10){
             monthNumberString = "0" + monthNumber
         }
         else{
             monthNumberString = "" + monthNumber
         }
-        chosenMonth = this.DateAndTimeParser.getShorthandMonthByNumber(monthNumberString);
+        const chosenMonth = this.DateAndTimeParser.getShorthandMonthByNumber(monthNumberString);
         
-        dayNumber = chosenDate.getDate()
-        daySuffix = this.DateAndTimeParser.deriveDayNumberSuffix(dayNumber);
+        const dayNumber = chosenDate.getDate()
+        const daySuffix = this.DateAndTimeParser.deriveDayNumberSuffix(dayNumber);
         return chosenMonth + " " + dayNumber + daySuffix + ", " + chosenDate.getFullYear() + " "
     }
 
     goToWebsite(){
-        url = "https://muncieevents.com/events/add"
+        const url = "https://muncieevents.com/events/add"
         Linking.openURL(url)
     }
+
+    
 
     render(){
         if(this.state.isLoading){;
@@ -487,14 +390,11 @@ export default class AddEventsForm extends Component{
                 </View>)
         }
         else{
-            IOSDatePickerModal = this.getIOSDatePicker();
-            androidTimePicker = this.getAndroidTimeFields();
-            tagListModal = this.getTagListModal();
-            required = this.getIsRequiredNotification();
-            dateAndTimes = this.getDateAndTimes();
+            const tagListModal = this.getTagListModal();
+            const required = this.getIsRequiredNotification();
+            const dateAndTimes = this.getDateAndTimes();
             return(
                     <View style={{flex:1}}>
-                        {IOSDatePickerModal}
                         {tagListModal}
                         <View style={Styles.formRow}>
                             <Text style={Styles.formLabel}>Title {required}</Text>
@@ -509,15 +409,60 @@ export default class AddEventsForm extends Component{
                             {this.getCategoryPicker()}
                         </View>
                         <View style={Styles.formRow}>
-                            <Text style={Styles.formLabel}>Date {required}</Text>
-                            <CustomButton
+                        
+                            <View>
+                            <Text style ={Styles.formLabel}>Date  {required}</Text>
+                                <CustomButton
                                 text="Select Date"
-                                buttonStyle={[Styles.mediumButtonStyle]}
+                                onPress={this.showDateTimePicker}
+                                buttonStyle={Styles.mediumButtonStyle}
                                 textStyle={Styles.mediumButtonTextStyle}
-                                onPress={() => this.selectDatePickerFromOS()}
-                            />
+                                />
+                                <DateTimePicker
+                                    isVisible={this.state.isDateTimePickerVisible}
+                                    onConfirm={this.handleDatePicked}
+                                    onCancel={this.hideDateTimePicker}
+                                />
+                            </View>
+                            <View>
+                            <Text style ={Styles.formLabel}>Start Time  {required}</Text>
+                            <CustomButton
+                                text="Start Time"
+                                onPress={this.showTimePicker}
+                                buttonStyle={Styles.mediumButtonStyle}
+                                textStyle={Styles.mediumButtonTextStyle}
+                                />
+                                <DateTimePicker
+                                isVisible={this.state.isTimePickerVisible}
+                                mode = "time"
+                                onConfirm={this.handleTimePicked}
+                                onCancel={this.hideTimePicker}
+                                />
+                            </View>
+                            <View>
+                            <Text style ={Styles.formLabel}>End Time</Text>
+                                <CustomButton
+                                    text="End Time"
+                                    onPress={this.showEndTimePicker}
+                                    buttonStyle={Styles.mediumButtonStyle}
+                                    textStyle={Styles.mediumButtonTextStyle}
+                                    />
+                                    <Text>   </Text>
+                                    <CustomButton
+                                        text="Clear Time"
+                                        buttonStyle={Styles.mediumButtonStyle}
+                                        textStyle={Styles.mediumButtonTextStyle}
+                                        onPress = {() => this.setState({endTime: null})}           
+                                    />
+                                    <DateTimePicker
+                                        isVisible={this.state.isEndTimePickerVisible}
+                                        mode = "time"
+                                        onConfirm={this.handleEndTimePicked}
+                                        onCancel={this.hideEndTimePicker}
+                                    />
+                            </View>
+            
                         </View>
-                        {androidTimePicker}
                         <View style={Styles.formRow}>
                             <Text style={Styles.formLabel}>Chosen Date and Time</Text>
                             <Text style={Styles.formEntry}>{dateAndTimes}</Text>
@@ -588,30 +533,32 @@ export default class AddEventsForm extends Component{
                                 underlineColorAndroid="transparent"
                             />
                         </View>
-                        <View style={Styles.formRow}>
-                            <Text style={Styles.formLabel}>Source </Text>
-                            <TextInput               
-                                onChangeText={(source) => this.setState({source})}
-                                style={[Styles.textBox, Styles.formEntry]}
-                                placeholder = "Did you get this information from a website, newspaper, flyer, etc?"
-                                underlineColorAndroid="transparent"
-                            />
-                        </View>
-                        <View style={Styles.formRow}>
-                            <Text style={Styles.formLabel}>Images </Text>
-                            <Text style={Styles.formEntry}>If you would like to upload images for your event, please use the </Text>
+						<KeyboardAvoidingView style ={{flex:1}} behavior="padding" enabled>
+                            <View style={Styles.formRow}>
+                                <Text style={Styles.formLabel}>Source </Text>
+                                <TextInput
+                                    onChangeText={(source) => this.setState({source})}
+                                    style={[Styles.textBox, Styles.formEntry]}
+                                    placeholder = "Did you get this information from a website, newspaper, flyer, etc?"
+                                    underlineColorAndroid="transparent"
+                                />
+                            </View>
+                            <View style={Styles.formRow}>
+                                <Text style={Styles.formLabel}>Image </Text>
+                                <Text style={Styles.formEntry}>If you would like to upload images for your event, please use the </Text>
                             <TouchableOpacity onPress={()=>{this.goToWebsite()}}><Text style={{color: 'blue'}}>Muncie Events website.</Text></TouchableOpacity>
-                        </View>
-                        <View style={Styles.formRow}>
-                            <CustomButton
-                                text="Submit"
-                                buttonStyle={Styles.longButtonStyle}
-                                textStyle={Styles.longButtonTextStyle}
-                                onPress={() => this.attemptEventSubmission()}
-                            />
-                        </View>
-                        <View>{this.state.statusMessage}</View>
-                        <Text>{'\n\n'}</Text>
+                            </View>
+                            <View style={Styles.formRow}>
+                            <View>{this.state.statusMessage}</View>
+                            <Text>{'\n\n'}</Text>
+                                <CustomButton
+                                    text="Submit"
+                                    buttonStyle={Styles.longButtonStyle}
+                                    textStyle={Styles.longButtonTextStyle}
+                                    onPress={() => this.attemptEventSubmission()}
+                                />
+                            </View>
+						</KeyboardAvoidingView>
                     </View>
             );
         }
@@ -631,53 +578,71 @@ export default class AddEventsForm extends Component{
             this.submitEvent()            
         }
         else{
-            statusMessage = (<Text>ERROR: One or more required fields not completed</Text>)
+            const statusMessage = (<Text>ERROR: One or more required fields not completed</Text>)
             this.setState({statusMessage: statusMessage})
         }
     }
       
     requiredFieldsAreFilled(){
-        chosenDate = this.state.chosenDate;
-        startTime = this.state.startTime;
-        endTime = this.state.endTime;
-        tagNames = this.state.selectedTagArray;
-        location = this.state.location;
-        categoryID = this.state.categorySelectedValue;
-        title = this.state.event;
-        source = this.state.source;
-        ageRestriction = this.state.ageRestriction;
-        cost = this.state.cost;
-        description = this.state.description;
-        address = this.state.address;
-        locationDetails = this.state.locationDetails;
+        const chosenDate = this.state.chosenDate;
+        const startTime = this.state.startTime;
+        const endTime = this.state.endTime;
+        const tagNames = this.state.selectedTagArray;
+        const location = this.state.location;
+        const categoryID = this.state.categorySelectedValue;
+        const title = this.state.event;
+        const source = this.state.source;
+        const ageRestriction = this.state.ageRestriction;
+        const cost = this.state.cost;
+        const description = this.state.description;
+        const address = this.state.address;
+        const locationDetails = this.state.locationDetails;
         return (categoryID && title && chosenDate && startTime 
             && description && location);
     }
 
-    formatTimeForAPI(time){
-        splitTime = time.split(':')
-        timeampm = splitTime[2].split(' ')[1]
-        return splitTime[0]+':'+splitTime[1]+timeampm.toLowerCase()
+    formatTimeForAPI(date){
+        let hours = date.getHours();
+        let minutes = date.getMinutes();
+        const ampm = hours >= 12 ? 'pm' : 'am';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
+        minutes = minutes < 10 ? '0'+minutes : minutes;
+        const strTime = hours + ':' + minutes + ' ' + ampm;
+        return strTime;
     }
 
     submitEvent(){
-        userToken = this.state.userToken
-        startTime = this.state.startTime
-        endTime = this.state.endTime
-        tagNames = this.state.selectedTagArray
-        location = this.state.location
-        categoryID = this.state.categorySelectedValue
-        title =this.state.event
-        source = this.state.source
-        ageRestriction = this.state.ageRestriction
-        cost = this.state.cost
-        description = this.state.description
-        address = this.state.address
-        locationDetails = this.state.locationDetails
-        chosenDate = this.state.chosenDate
+        const userToken = this.props.userToken
+        let startTime = this.state.startTime
+        let endTime = this.state.endTime
+        const tagNames = this.state.selectedTagArray
+        const location = this.state.location
+        let categoryID = this.state.categorySelectedValue
+        const title =this.state.event
+        const source = this.state.source
+        const ageRestriction = this.state.ageRestriction
+        const cost = this.state.cost
+        const description = this.state.description
+        const address = this.state.address
+        const locationDetails = this.state.locationDetails
+        let chosenDate = this.state.chosenDate
+       
+        
+        
+        
 
+        
+       // fixes bug were categoryId = "Music"
+       if(categoryID == "Music"){
+            categoryID = 13
+        }
+        
+        let url;
+        let imageurl;
         if(userToken){
             url = "https://api.muncieevents.com/v1/event?userToken=" + userToken + "&apikey="+this.APIKey.getAPIKey()
+            imageurl = "https://api.muncieevents.com/v1/image?userToken=" + userToken + "&apikey="+this.APIKey.getAPIKey()
         }
         else{
             url = "https://api.muncieevents.com/v1/event?apikey="+this.APIKey.getAPIKey()
@@ -695,6 +660,9 @@ export default class AddEventsForm extends Component{
             chosenDate = chosenDate.getFullYear() + '-' + ('0' + (chosenDate.getMonth()+1)).slice(-2) + '-' + ('0' + chosenDate.getDate()).slice(-2)
         }
         this.setState({isLoading: true})
+
+        
+      
         fetch(url,
             {method: "POST",
             headers: {
@@ -714,7 +682,7 @@ export default class AddEventsForm extends Component{
                 cost: cost,
                 description: description,
                 address: address,
-                location_details: locationDetails
+                location_details: locationDetails,
             })
         })
         .then((response) => response.json())
@@ -722,12 +690,18 @@ export default class AddEventsForm extends Component{
         .catch(error =>{
                         console.log(error)
                         this.setState({failedToLoad:true})});
+                
+           
     }
+    
+    
 
     handleAPIResponse(responseJson){
+        let statusMessage;
         try{
             statusMessage = (<Text>{responseJson.errors[0].detail}</Text>)
-            this.setState({statusMessage: statusMessage})
+            this.setState({statusMessage: statusMessage})            
+
         }
         catch(error){
             statusMessage = (<View>
@@ -738,6 +712,10 @@ export default class AddEventsForm extends Component{
                                 </View>)
             this.setState({statusMessage: statusMessage,eventSubmitted:true, isLoading: false})
         }
+    }
+
+    handleAPIResponseImage(responseJson){
+        this.setState({imageId: responseJson.data[0].id})
     }
 
     resetForm(){
@@ -761,6 +739,7 @@ export default class AddEventsForm extends Component{
             address: "",
             locationDetails: null,
             eventSubmitted: false,
+            image: null
         })
     }
 
@@ -771,3 +750,172 @@ export default class AddEventsForm extends Component{
         return num.toString()
     }
 }
+
+
+
+
+/*
+
+import * as ImagePicker from 'expo-image-picker';
+import Constants from 'expo-constants';
+import * as Permissions from 'expo-permissions';
+
+
+This portion is to implement in future updates. This is the base work to get the user's uploaded images from api.muncieevents.
+The problem is this ''this.setState({images: responseData.data.map((category) => {return [ category.attributes.full_url, category.id]})}) ''
+It does map json data but when an array is called (this.state.images[0]) it is undefined at first then becomes the array.
+If you press the button multiple times the error goes away.
+
+getImagePicker(){
+
+        if(this.props.userToken){
+            return (
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                <Button
+                title="Pick from your uploaded images"
+                onPress={this._pickImage}
+                />
+                
+            </View>
+            );
+         }
+        
+         else{
+             return(
+             <View>
+                 <Text>Please log in to pick from your uploaded images and close app</Text>
+             </View>
+             );
+         }
+    
+    
+    }
+
+
+    _pickImage = async () => {
+
+                imageurl = "https://api.muncieevents.com/v1/user/images?userToken=" + this.props.userToken + "&apikey="+this.APIKey.getAPIKey()
+                
+                
+
+                fetch(imageurl,
+                    {method: "GET",
+                    headers: {
+                        Accept: 'application/vnd.api+json',
+                        },
+                    
+                })
+                    .then((response) => response.json())
+                    .then((responseData) => {
+                        this.setState({images: responseData.data.map((category) => {return [ category.attributes.full_url, category.id]})}) 
+                    })
+                    .catch(error =>{
+                        console.log(error)
+                        this.setState({failedToLoad:true})});
+                    
+      };
+
+
+
+
+
+============================================================================================================
+
+This is an image picker and it does pick an image but could never format the image correctly to post to api.muncieevents
+
+       getImagePicker(){
+    let { image } = this.state;
+
+    return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Button
+        title="Pick an image from camera roll"
+        onPress={this._pickImage}
+        />
+        {image &&
+        <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
+    </View>
+    );
+
+
+}
+
+_pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1
+    });
+
+
+    if (!result.cancelled) {
+      this.setState({ image: result.uri });
+    }
+  };
+
+getPermissionAsync = async () => {
+    if (Constants.platform.ios) {
+      const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+      if (status !== 'granted') {
+        alert('Sorry, we need camera roll permissions to make this work!');
+      }
+    }
+}
+
+
+===============================================================================================
+
+https://stackoverflow.com/questions/42521679/how-can-i-upload-a-photo-with-expo
+
+I attempted this and numerous other modifications with formData. The api just would never accept it.
+I think sending a blob might work but RN and expo do not have good support for that.
+Graham Watson 'The API just expects a binary image file to be uploaded to that endpoint, the same as if an image is being uploaded to a form in a browser'
+I tried to rn-fetch-blob but that is not supported by expo.
+
+I though this link would be the best place to get started https://www.reddit.com/r/reactnative/comments/d65y2w/help_send_file_in_binary/
+
+
+
+async function takeAndUploadPhotoAsync() {
+  // Display the camera to the user and wait for them to take a photo or to cancel
+  // the action
+  let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1
+  });
+
+  if (result.cancelled) {
+    return;
+  }
+
+  // ImagePicker saves the taken photo to disk and returns a local URI to it
+  let localUri = result.uri;
+  let filename = localUri.split('/').pop();
+
+  // Infer the type of the image
+  let match = /\.(\w+)$/.exec(filename);
+  let type = match ? `image/${match[1]}` : `image`;
+
+  // Upload the image using the fetch and FormData APIs
+  let formData = new FormData();
+  // Assume "file" is the name of the form field the server expects
+  formData.append('file', { uri: localUri, name: filename, type });
+
+  imageurl = 'https://api.muncieevents.com/v1/image?userToken=' + this.props.userToken + "&apikey="+this.APIKey.getAPIKey()
+
+  return await fetch(YOUR_SERVER_URL, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'content-type': 'multipart/form-data',
+    },
+  });
+}
+
+
+*/
+
+AddEventsForm.contextType = UserContext;

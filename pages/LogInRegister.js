@@ -9,6 +9,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import TopBar from './top_bar';
 import InternetError from '../components/InternetError';
 import APIKey from '../APIKey'
+import {UserContext} from '../context/UserContext';
 
 export default class LogInRegister extends React.Component {
     constructor(props){
@@ -30,6 +31,7 @@ export default class LogInRegister extends React.Component {
     }
     
     render() {
+      let mainView;
       if(this.state.failedToLoad){
         mainView = this.getErrorMessage();
       }
@@ -83,7 +85,7 @@ export default class LogInRegister extends React.Component {
     }
 
     getLoginSequence(){
-      profileInfo = "";
+      let profileInfo = "";
       if(this.state.isLoggedIn){
           profileInfo = this.showProfileInfo();
       }
@@ -174,9 +176,9 @@ export default class LogInRegister extends React.Component {
     }
     
     logUserIn = async(dataSource) => {
-      uid = ""
-      utkn = ""
-      credentialsAreCorrect = false
+      let uid = ""
+      let utkn = ""
+      let credentialsAreCorrect = false
       try{
        uid = dataSource.data.id;
        utkn = dataSource.data.attributes.token
@@ -191,6 +193,7 @@ export default class LogInRegister extends React.Component {
         await AsyncStorage.setItem('UniqueToken', utkn);
         await AsyncStorage.setItem('Token', uid);
         this.setState({isLoggedIn: true, uniqueToken: utkn, userid: uid});
+        this.context.updateUserContext(dataSource.data.attributes.name, utkn);
       } catch (error) {
         console.log("Error storing login information");
       }
@@ -202,6 +205,7 @@ export default class LogInRegister extends React.Component {
         await AsyncStorage.removeItem('UniqueToken');
         await AsyncStorage.removeItem('Token');
         this.setState({isLoggedIn: false, statusMessage: "You are not logged in", userid: "", uniqueToken: ""});
+        this.context.updateUserContext(null, null);
       } catch (error) {
         console.log("Error logging user out");
       }
@@ -211,14 +215,14 @@ export default class LogInRegister extends React.Component {
       try {
         const tkn = await AsyncStorage.getItem('Token')
         const utoken = await AsyncStorage.getItem('UniqueToken')
-        this.determineLoginStatus(tkn, utoken);
+        this.setLoginStatus(tkn, utoken);
        } catch (error) {
-          this.determineLoginStatus()
+          this.setLoginStatus()
           return "NULL"
        }
     }
 
-    determineLoginStatus(tkn, utoken){
+    setLoginStatus(tkn, utoken){
       if(tkn && utoken){
         this.setState({isLoading: false, userid: tkn, uniqueToken: utoken, isLoggedIn: true})
       }
@@ -246,3 +250,5 @@ export default class LogInRegister extends React.Component {
       })
     }
 }
+
+LogInRegister.contextType = UserContext;

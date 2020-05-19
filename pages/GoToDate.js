@@ -1,5 +1,5 @@
 import React from 'react';
-import {Text, View, Platform, DatePickerAndroid, DatePickerIOS} from 'react-native';
+import {Text, View, Button} from 'react-native';
 import CustomButton from "./CustomButton";
 import EventList from "../EventList"
 import Styles from './Styles';
@@ -8,6 +8,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import TopBar from './top_bar';
 import InternetError from '../components/InternetError';
 import APIKey from '../APIKey'
+import DateTimePicker from "react-native-modal-datetime-picker";
 
 export default class GoToDate extends React.Component {
   constructor(props){
@@ -18,17 +19,33 @@ export default class GoToDate extends React.Component {
                   searchURL: "",
                   searchResultsFound: false,
                   isSearching: false,
-                  failedToLoad:false
+                  failedToLoad:false,
+                  isDateTimePickerVisible: false
                 }  
     this.dateSelected = false; 
     this.setDate = this.setDate.bind(this);
     this.APICacher = new APICacher();
     this.APIKey = new APIKey();
   }
+  
+  
 
   componentDidMount(){
     this.setState({formattedDate: this.updateEventView(new Date())})
   }
+  showDateTimePicker = () => {
+    this.setState({ isDateTimePickerVisible: true });
+  };
+
+  hideDateTimePicker = () => {
+    this.setState({ isDateTimePickerVisible: false });
+  };
+
+  handleDatePicked = date => {
+    this.updateEventView(date)
+    this.setState({isSearching: true})
+    this.hideDateTimePicker();
+  };
 
     render() {
       titleView = this.getTitle();
@@ -73,22 +90,7 @@ export default class GoToDate extends React.Component {
     );
   }
 
-  getAndroidFormattedDate(newDate){
-      day = newDate.getDate();
-      month = newDate.getMonth()+1;
-      year = newDate.getFullYear();
-      //pad month if needed for api
-      if(newDate.getMonth()+1 < 10){
-         month="0" + (newDate.getMonth()+1).toString();
-      }
-      //pad day if needed for api
-      if(newDate.getDate() < 10){
-        day='0' + newDate.getDate().toString();
-      }
-      formattedDate = year + '-' + month + '-' + day
-      return formattedDate;
-  }
-
+  
    getTitle(){
       return(
         <Text style={Styles.title}>
@@ -97,13 +99,9 @@ export default class GoToDate extends React.Component {
       );
     }
 
-    updateEventView(date){
-        if(Platform.OS == 'ios'){
+    updateEventView = date => {
           formattedDate = this.getIOSFormattedDate(date)
-        }
-        else{
-          formattedDate = this.getAndroidFormattedDate(date)
-        }
+        
         url = 'https://api.muncieevents.com/v1/events?start='+formattedDate+'&end='+formattedDate+'&apikey='+this.APIKey.getAPIKey()
         this.setState({searchURL: url, chosenDate: date});
     }
@@ -132,50 +130,30 @@ export default class GoToDate extends React.Component {
         </View> 
         );
     }
+    
+    
+    
+    
 
     getDatePicker(){
-      if(Platform.OS == 'ios'){
         return (
               <View>
-                <DatePickerIOS 
-                  date={this.state.chosenDate}
-                  onDateChange={(date) => this.updateEventView(date)}
-                  mode={'date'}
-                />
                 <CustomButton
                   text="Search"
-                  onPress={()=>this.setState({isSearching: true})}
+                  onPress={this.showDateTimePicker}
                   buttonStyle={Styles.longButtonStyle}
                   textStyle={Styles.longButtonTextStyle}
                   />
+                  <DateTimePicker
+                    isVisible={this.state.isDateTimePickerVisible}
+                    onConfirm={this.handleDatePicked}
+                    onCancel={this.hideDateTimePicker}
+                  />
               </View>)
       }
-      else if(Platform.OS == 'android'){ 
-        return(
-          <CustomButton
-              text="Select Date"
-              onPress={() => this.getAndroidDatePicker()}
-              buttonStyle={Styles.longButtonStyle}
-              textStyle={Styles.longButtonTextStyle}
-          />
-        )      
-      }
-    }
+      
 
-    async getAndroidDatePicker(){
-      try {
-        const {action, year, month, day} = await DatePickerAndroid.open({
-          date: new Date()
-        });
-        if (action == DatePickerAndroid.dateSetAction) {
-          newDate = new Date(year, month, day);
-          this.updateEventView(newDate);
-          this.setState({isSearching: true});
-        }
-      } catch ({code, message}) {
-        console.warn('Cannot open date picker', message);
-      }
-    }
+    
 
     getIOSFormattedDate(date){
       day = date.getDate();
@@ -193,11 +171,8 @@ export default class GoToDate extends React.Component {
     }
 
     setDate(newDate) {
-      if(Platform.OS == 'ios'){
+
         this.setState({chosenDate: newDate})
-      }
-      else{
-        this.setState({chosenDate: newDate, formattedDate: this.getAndroidFormattedDate(newDate), dateSelected: true})
-      }
+      
     }
 }

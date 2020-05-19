@@ -48,8 +48,10 @@ export default class ChangePassword extends React.Component {
     }
 
     getChangePasswordScreen(){
+        title = "Change Password"
         return(
             <View>
+                <Text style={Styles.title}>{title}</Text>
                 <TextInput 
                     onChangeText={(newPassword) => this.setState({newPassword})}
                     style={Styles.textBox}
